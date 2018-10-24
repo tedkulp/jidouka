@@ -1,0 +1,14 @@
+{
+    "options": {
+        "debug": true,
+        "clientId": "abc123"
+    },
+    "connection": {
+        "reconnect": true
+    },
+    "identity": {
+        "username": "mybotname",
+        "password": "oauth:abc123"
+    },
+    "channels": ["#mychannelnamewithhash"]
+}
