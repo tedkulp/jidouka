@@ -1,23 +1,24 @@
-// @flow
 /* eslint-disable no-console */
-const immutable = require('immutable');
+import { Set, hash } from 'immutable';
+
+type EventCallback = (details: Object, description?: string) => void;
 
 class EventDefinition {
     eventName: string;
     description: string;
-    listeners: immutable.Set<(Object, ?string) => void>;
+    listeners: Set<EventCallback>;
 
     constructor(eventName: string, description: string) {
         this.eventName = eventName;
         this.description = description;
-        this.listeners = immutable.Set();
+        this.listeners = Set();
     }
 
-    addListener(fn: (Object, ?string) => void): void {
+    addListener(fn: EventCallback): void {
         this.listeners = this.listeners.add(fn);
     }
 
-    removeListener(fn: (Object, ?string) => void): void {
+    removeListener(fn: EventCallback): void {
         this.listeners = this.listeners.remove(fn);
     }
 
@@ -35,27 +36,27 @@ class EventDefinition {
     }
 
     hashCode(): number {
-        return immutable.hash(this.eventName);
+        return hash(this.eventName);
     }
 }
 
 class EventManager {
-    events: immutable.Set<EventDefinition>;
+    events: Set<EventDefinition>;
 
     register(group: string, eventName: string, description: string): void {
-        this.events = this.events || immutable.Set();
+        this.events = this.events || Set();
         this.events = this.events.add(new EventDefinition(this.createEventName(group, eventName), description));
         // console.log(this.events.toJSON());
     }
 
-    addListener(group: string, eventName: string, fn: (Object, ?string) => void): void {
+    addListener(group: string, eventName: string, fn: EventCallback): void {
         const event: EventDefinition = this.getDefinition(group, eventName);
         if (event) {
             event.addListener(fn);
         }
     }
 
-    removeListener(group: string, eventName: string, fn: (Object, ?string) => void): void {
+    removeListener(group: string, eventName: string, fn: EventCallback): void {
         const event: EventDefinition = this.getDefinition(group, eventName);
         if (event) {
             event.removeListener(fn);
@@ -69,7 +70,7 @@ class EventManager {
         }
     }
 
-    getEventNames(group: string = ''): Array<string> {
+    getEventNames(group?: string): Array<string> {
         if (group) {
             return this.events
                 .filter(event => event.eventName.startsWith(group + '.'))
@@ -91,4 +92,5 @@ class EventManager {
     }
 }
 
-module.exports = new EventManager();
+const mgr = new EventManager();
+export default mgr;

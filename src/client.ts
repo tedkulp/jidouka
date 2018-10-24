@@ -1,11 +1,11 @@
-// @flow
 /* eslint-disable no-console */
 
-const tmi = require('tmi.js');
-const _ = require('lodash');
+import tmi from 'tmi.js';
+import * as _ from 'lodash';
 
-const users = require('./users');
-const events = require('./events');
+import users from './users';
+import events from './events';
+import * as config from '../config/config.json';
 
 events.register('chat', 'join', 'User joined channel');
 events.register('chat', 'part', 'User parted channel');
@@ -18,8 +18,6 @@ events.register('chat', 'cheer', 'Someone cheered');
 events.register('chat', 'message', 'Message in channel');
 events.register('chat', 'ban', 'Someone banned in channel');
 events.register('chat', 'timeout', 'Someone timed out in channel');
-
-const config = require('../config');
 
 const client = new tmi.client(config);
 
@@ -180,4 +178,4 @@ client.on('timeout', (channel, username, reason, duration) => {
 // Connect the client to the server..
 client.connect();
 
-module.exports = client;
+export default client;

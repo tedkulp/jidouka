@@ -1,17 +1,16 @@
-// @flow
 /* eslint-disable no-console */
 
-const immutable = require('immutable');
-const moment = require('moment');
+import { OrderedMap } from 'immutable';
+import moment from 'moment';
 
-const events = require('./events');
-const client = require('./client');
+import events from './events';
+import client from './client';
 
 type ResponseList = Array<string>;
 type CommandReponse = (args: string) => string | ResponseList;
 
 class CommandManager {
-    commands: immutable.OrderedMap<string, CommandReponse> = new immutable.OrderedMap();
+    commands: OrderedMap<string, CommandReponse> = OrderedMap();
 
     constructor() {
         events.addListener('chat', 'message', this.chatHandler.bind(this));
@@ -22,7 +21,7 @@ class CommandManager {
         console.log('commands', this.commands);
     }
 
-    chatHandler(details: Object) {
+    chatHandler(details: any) {
         // details: { channel, userstate, message }
         if (details && details.message) {
             const foundCmd = this.commands
@@ -61,4 +60,4 @@ mgr.register('!time utc', (args: string): string => {
 //     return new Array('a', 'b', 'c');
 // });
 
-module.exports = mgr;
+export default mgr;

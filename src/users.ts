@@ -1,10 +1,9 @@
-// @flow
 /* eslint-disable no-console */
 
-const immutable: any = require('immutable');
+import { Set } from 'immutable';
 
-const users = {};
-const mods = {};
+const users: any = {};
+const mods: any = {};
 
 // class User {
 //     username: string;
@@ -19,7 +18,7 @@ const mods = {};
 
 const addUser = (channel: string, username: string): void => {
     if (!users[channel]) {
-        users[channel] = immutable.Set();
+        users[channel] = Set();
     }
 
     users[channel] = users[channel].add(username);
@@ -27,7 +26,7 @@ const addUser = (channel: string, username: string): void => {
 
 const removeUser = (channel: string, username: string): void => {
     if (!users[channel]) {
-        users[channel] = immutable.Set();
+        users[channel] = Set();
         return;
     }
 
@@ -36,7 +35,7 @@ const removeUser = (channel: string, username: string): void => {
 
 const getUsers = (channel: string): Array<string> => {
     if (!users[channel]) {
-        users[channel] = immutable.Set();
+        users[channel] = Set();
     }
 
     return users[channel].toArray();
@@ -44,7 +43,7 @@ const getUsers = (channel: string): Array<string> => {
 
 const addMod = (channel: string, modname: string): void => {
     if (!mods[channel]) {
-        mods[channel] = immutable.Set();
+        mods[channel] = Set();
     }
 
     mods[channel] = mods[channel].add(modname);
@@ -52,7 +51,7 @@ const addMod = (channel: string, modname: string): void => {
 
 const removeMod = (channel: string, modname: string): void => {
     if (!mods[channel]) {
-        mods[channel] = immutable.Set();
+        mods[channel] = Set();
         return;
     }
 
@@ -61,13 +60,13 @@ const removeMod = (channel: string, modname: string): void => {
 
 const getMods = (channel: string): Array<string> => {
     if (!mods[channel]) {
-        mods[channel] = immutable.Set();
+        mods[channel] = Set();
     }
 
     return mods[channel].toArray();
 };
 
-module.exports = {
+export default {
     addUser,
     removeUser,
     getUsers,
