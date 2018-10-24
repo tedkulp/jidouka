@@ -1,4 +1,9 @@
 {
-  "presets": ["flow", "env"],
-  "plugins": ["transform-class-properties"]
+  "presets": [
+    "@babel/preset-flow",
+    "@babel/preset-env"
+  ],
+  "plugins": [
+    "@babel/plugin-proposal-class-properties"
+  ]
 }
