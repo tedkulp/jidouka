@@ -1,41 +1,26 @@
-/* eslint-disable no-console */
+import { createLogger, format, transports } from 'winston';
 
-const levels = { "trace": 0, "debug": 1, "info": 2, "warn": 3, "error": 4, "fatal": 5 };
-let currentLevel = "info";
+import util from 'util';
+import _ from 'lodash';
+import config from '../config/config.json';
 
-const formatDate = date => {
-    var hours = date.getHours();
-    var mins = date.getMinutes();
+// {
+//     error: 0,
+//     warn: 1,
+//     info: 2,
+//     verbose: 3,
+//     debug: 4,
+//     silly: 5
+// }
 
-    hours = (hours < 10 ? "0" : "") + hours;
-    mins = (mins < 10 ? "0" : "") + mins;
+const logger = createLogger({
+    level: _.get(config, 'options.logLevel', 'info'),
+    format: format.combine(
+        format.timestamp({format: 'HH:mm:ss'}),
+        format.colorize(),
+        format.printf(info => `[${info.timestamp}] ${info.level}: ${util.inspect(info.message)}`),
+    ),
+    transports: [new transports.Console()],
+});
 
-    return `${hours}:${mins}`;
-};
-
-// Logger implementation..
-const log = level => {
-    // Return a console message depending on the logging level..
-    return (message: any, marker?: string) => {
-        if (levels[level] >= levels[currentLevel]) {
-            if (marker && marker !== '') {
-                console.log(`[${formatDate(new Date())}] ${level}: ${marker} - ${message}`);
-            } else {
-                console.log(`[${formatDate(new Date())}] ${level}: ${message}`);
-            }
-        }
-    };
-};
-
-export default {
-    // Change the current logging level..
-    setLevel: level => {
-        currentLevel = level;
-    },
-    trace: log("trace"),
-    debug: log("debug"),
-    info: log("info"),
-    warn: log("warn"),
-    error: log("error"),
-    fatal: log("fatal")
-};
+export default logger;

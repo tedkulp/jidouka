@@ -25,7 +25,7 @@ const getStreamData = async () => {
             },
         });
 
-        log.trace(response.request.fromCache ? 'true' : 'false', 'response from cache');
+        log.debug(response.request.fromCache ? 'true' : 'false', 'response from cache');
 
         state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
 
@@ -67,7 +67,7 @@ const getUserId = async (username?: string) => {
             },
         });
 
-        log.trace(response.request.fromCache ? 'true' : 'false', 'response from cache');
+        log.debug(response.request.fromCache ? 'true' : 'false', 'response from cache');
 
         state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
 
