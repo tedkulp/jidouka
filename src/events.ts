@@ -1,5 +1,5 @@
-/* eslint-disable no-console */
 import { Set, hash } from 'immutable';
+import logger from './logger';
 
 type EventCallback = (details: Object, description?: string) => void;
 
@@ -27,7 +27,7 @@ class EventDefinition {
     }
 
     trigger(details: Object): void {
-        console.log('trigger', this.eventName, this.description, details);
+        logger.info([this.eventName, this.description, details], 'event triggered');
         this.listeners.forEach(fn => fn(details, this.description));
     }
 

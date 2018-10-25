@@ -1,10 +1,9 @@
-/* eslint-disable no-console */
-
 import { OrderedMap } from 'immutable';
 import moment from 'moment';
 
 import events from './events';
 import client from './client';
+import log from './logger'
 
 type ResponseList = Array<string>;
 type CommandReponse = (args: string) => string | ResponseList;
@@ -12,13 +11,13 @@ type CommandReponse = (args: string) => string | ResponseList;
 class CommandManager {
     commands: OrderedMap<string, CommandReponse> = OrderedMap();
 
-    constructor() {
+    init() {
         events.addListener('chat', 'message', this.chatHandler.bind(this));
     }
 
     register(commandName: string, fn: CommandReponse) {
         this.commands = this.commands.set(commandName, fn);
-        console.log('commands', this.commands);
+        log.info('registered command', commandName);
     }
 
     chatHandler(details: any) {

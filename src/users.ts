@@ -1,69 +1,67 @@
-/* eslint-disable no-console */
+import { Set, Map, hash } from 'immutable';
 
-import { Set } from 'immutable';
+let users: Map<string, Set<string>> = Map();
+let mods: Map<string, Set<string>> = Map();
 
-const users: any = {};
-const mods: any = {};
-
-// class User {
-//     username: string;
-//     addTime: Date;
-//     equals(v: User): boolean {
-//         return this.username === v.username;
-//     }
-//     hashCode(): number {
-//         return immutable.hash(this.username);
-//     }
-// }
+class User {
+    username: string;
+    addTime: Date;
+    equals(v: User): boolean {
+        return this.username === v.username;
+    }
+    hashCode(): number {
+        return hash(this.username);
+    }
+}
 
 const addUser = (channel: string, username: string): void => {
-    if (!users[channel]) {
-        users[channel] = Set();
+    if (!users.has(channel)) {
+        users = users.set(channel, Set());
     }
 
-    users[channel] = users[channel].add(username);
+    users = users.set(channel, users.get(channel).add(username));
 };
 
 const removeUser = (channel: string, username: string): void => {
-    if (!users[channel]) {
-        users[channel] = Set();
+    if (!users.has(channel)) {
+        users = users.set(channel, Set());
         return;
     }
 
-    users[channel] = users[channel].remove(username);
+    users = users.set(channel, users.get(channel).remove(username));
 };
 
 const getUsers = (channel: string): Array<string> => {
-    if (!users[channel]) {
-        users[channel] = Set();
+    if (!users.has(channel)) {
+        users = users.set(channel, Set());
     }
 
-    return users[channel].toArray();
+    return users.get(channel).toArray();
 };
 
 const addMod = (channel: string, modname: string): void => {
-    if (!mods[channel]) {
-        mods[channel] = Set();
+    if (!mods.has(channel)) {
+        mods = mods.set(channel, Set());
     }
 
-    mods[channel] = mods[channel].add(modname);
+    mods = mods.set(channel, mods.get(channel).add(modname));
 };
 
 const removeMod = (channel: string, modname: string): void => {
-    if (!mods[channel]) {
-        mods[channel] = Set();
+    if (!mods.has(channel)) {
+        mods = mods.set(channel, Set());
         return;
     }
 
-    mods[channel] = mods[channel].remove(modname);
+    mods = mods.set(channel, mods.get(channel).remove(modname));
 };
 
 const getMods = (channel: string): Array<string> => {
-    if (!mods[channel]) {
-        mods[channel] = Set();
+    if (!mods.has(channel)) {
+        mods = mods.set(channel, Set());
     }
 
-    return mods[channel].toArray();
+    return mods.get(channel).toArray();
 };
 
 export default {

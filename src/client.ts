@@ -1,11 +1,10 @@
-/* eslint-disable no-console */
-
 import tmi from 'tmi.js';
-import * as _ from 'lodash';
+import _ from 'lodash';
 
 import users from './users';
 import events from './events';
-import * as config from '../config/config.json';
+import config from '../config/config.json';
+import logger from './logger';
 
 events.register('chat', 'join', 'User joined channel');
 events.register('chat', 'part', 'User parted channel');
@@ -44,7 +43,7 @@ client.on('part', (channel, username, self) => {
 });
 
 client.on('names', (channel, usernames) => {
-    console.log('names', channel, usernames);
+    logger.info([channel, usernames], 'names');
     _.each(usernames, username => {
         users.addUser(channel, username);
         //TODO: Send event?
@@ -53,7 +52,7 @@ client.on('names', (channel, usernames) => {
 });
 
 client.on('roomstate', (channel, state) => {
-    console.log('roomstate', channel, state);
+    logger.info([channel, state], 'roomstate');
     client.mods(channel);
 });
 
@@ -81,11 +80,11 @@ client.on('resub', (channel, username, months, message, userstate, methods) => {
 });
 
 client.on('notice', (channel, msgid, message) => {
-    console.log('notice', channel, msgid, message);
+    logger.info([channel, msgid, message], 'notice');
 });
 
 client.on('mods', (channel, mods) => {
-    console.log('mods event', channel, mods);
+    logger.info([channel, mods], 'mods event');
     _.each(mods, username => {
         users.addMod(channel, username);
         //TODO: Add event?
@@ -114,7 +113,7 @@ client.on('unmod', (channel, username) => {
 });
 
 client.on('message', (channel, userstate, message, self) => {
-    console.log('message', channel, userstate, message, self);
+    logger.info([channel, userstate, message, self], 'message');
 });
 
 client.on('hosted', (channel, username, viewers, autohost) => {
@@ -128,11 +127,11 @@ client.on('hosted', (channel, username, viewers, autohost) => {
 });
 
 client.on("hosting", function (channel, target, viewers) {
-    console.log('hosting', channel, target, viewers);
+    logger.info([channel, target, viewers], 'hosting');
 });
 
-client.on("unhost", function (channel, target, viewers) {
-    console.log('unhost', channel, target, viewers);
+client.on("unhost", function (channel, viewers) {
+    logger.info([channel, viewers], 'unhost');
 });
 
 client.on('cheer', (channel, userstate, message) => {
@@ -176,6 +175,6 @@ client.on('timeout', (channel, username, reason, duration) => {
 });
 
 // Connect the client to the server..
-client.connect();
+// client.connect();
 
 export default client;

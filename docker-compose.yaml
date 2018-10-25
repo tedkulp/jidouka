@@ -1,0 +1,15 @@
+version: '3'
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - "./data/mongo:/data/db"
+  redis:
+    image: redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./data/redis:/data"
