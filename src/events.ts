@@ -63,10 +63,10 @@ class EventManager {
         }
     }
 
-    trigger(group: string, eventName: string, details: Object): void {
+    trigger(group: string, eventName: string, details?: Object): void {
         const event: EventDefinition = this.getDefinition(group, eventName);
         if (event) {
-            event.trigger(details);
+            event.trigger(details || {});
         }
     }
 

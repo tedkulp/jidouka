@@ -16,6 +16,7 @@
     "dbName": "n3rdbot"
   },
   "options": {
+    "hostname": "http://myhostname",
     "clientId": "abc123",
     "logLevel": "error"
   }
