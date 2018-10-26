@@ -17,7 +17,7 @@ class CommandManager {
 
     register(commandName: string, fn: CommandReponse) {
         this.commands = this.commands.set(commandName, fn);
-        log.info('registered command', commandName);
+        log.info(['registered command', commandName]);
     }
 
     chatHandler(details: any) {

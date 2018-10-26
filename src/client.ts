@@ -18,7 +18,20 @@ events.register('chat', 'message', 'Message in channel');
 events.register('chat', 'ban', 'Someone banned in channel');
 events.register('chat', 'timeout', 'Someone timed out in channel');
 
-const client = new tmi.client(config);
+const client = new tmi.client({
+    "options": {
+        "debug": _.includes(['debug', 'verbose', 'silly'], config.options.logLevel),
+        "clientId": config.options.clientId,
+    },
+    "connection": {
+        "reconnect": true,
+    },
+    "identity": {
+        "username": config.bot.username,
+        "password": config.bot.password,
+    },
+    "channels": [`#${config.streamer.username}`],
+});
 
 client.on('join', (channel, username, self) => {
     // console.log('join', channel, username);
@@ -43,7 +56,7 @@ client.on('part', (channel, username, self) => {
 });
 
 client.on('names', (channel, usernames) => {
-    logger.info([channel, usernames], 'names');
+    logger.info(['names', channel, usernames]);
     _.each(usernames, username => {
         users.addUser(channel, username);
         //TODO: Send event?
@@ -52,7 +65,7 @@ client.on('names', (channel, usernames) => {
 });
 
 client.on('roomstate', (channel, state) => {
-    logger.info([channel, state], 'roomstate');
+    logger.info(['roomstate', channel, state]);
     client.mods(channel);
 });
 
@@ -80,11 +93,11 @@ client.on('resub', (channel, username, months, message, userstate, methods) => {
 });
 
 client.on('notice', (channel, msgid, message) => {
-    logger.info([channel, msgid, message], 'notice');
+    logger.info(['notice', channel, msgid, message]);
 });
 
 client.on('mods', (channel, mods) => {
-    logger.info([channel, mods], 'mods event');
+    logger.info(['mods event', channel, mods]);
     _.each(mods, username => {
         users.addMod(channel, username);
         //TODO: Add event?
@@ -113,7 +126,7 @@ client.on('unmod', (channel, username) => {
 });
 
 client.on('message', (channel, userstate, message, self) => {
-    logger.info([channel, userstate, message, self], 'message');
+    logger.info(['message', channel, userstate, message, self]);
 });
 
 client.on('hosted', (channel, username, viewers, autohost) => {
@@ -127,11 +140,11 @@ client.on('hosted', (channel, username, viewers, autohost) => {
 });
 
 client.on("hosting", function (channel, target, viewers) {
-    logger.info([channel, target, viewers], 'hosting');
+    logger.info(['hosting', channel, target, viewers]);
 });
 
 client.on("unhost", function (channel, viewers) {
-    logger.info([channel, viewers], 'unhost');
+    logger.info(['unhost', channel, viewers]);
 });
 
 client.on('cheer', (channel, userstate, message) => {

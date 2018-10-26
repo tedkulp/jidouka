@@ -21,11 +21,11 @@ const getStreamData = async () => {
                 'Client-ID': config.options.clientId,
             },
             params: {
-                user_login: config.identity.host,
+                user_login: config.streamer.username,
             },
         });
 
-        log.debug(response.request.fromCache ? 'true' : 'false', 'response from cache');
+        log.debug(['response from cache', response.request.fromCache ? 'true' : 'false']);
 
         state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
 
@@ -63,11 +63,11 @@ const getUserId = async (username?: string) => {
                 'Client-ID': config.options.clientId,
             },
             params: {
-                login: username || config.identity.host,
+                login: username || config.streamer.username,
             },
         });
 
-        log.debug(response.request.fromCache ? 'true' : 'false', 'response from cache');
+        log.debug(['response from cache', response.request.fromCache ? 'true' : 'false']);
 
         state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
 

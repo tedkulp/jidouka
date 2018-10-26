@@ -27,7 +27,7 @@ class EventDefinition {
     }
 
     trigger(details: Object): void {
-        logger.info([this.eventName, this.description, details], 'event triggered');
+        logger.info(['event triggered', this.eventName, this.description, details]);
         this.listeners.forEach(fn => fn(details, this.description));
     }
 

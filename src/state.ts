@@ -16,7 +16,7 @@ class State {
         this.setOnline(await api.getOnlineStatus());
         this.setOnlineStartTime(await api.getOnlineStartTime());
 
-        log.info(this, 'state init');
+        log.info(['state init', this]);
     }
 
     isOnline() {

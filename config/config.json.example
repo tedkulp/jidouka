@@ -1,18 +1,12 @@
 {
-  "options": {
-    "debug": false,
-    "clientId": "abc123",
-    "logLevel": "error"
+  "streamer": {
+    "username": "streamername",
+    "password": "oauth:abc123"
   },
-  "connection": {
-    "reconnect": true
+  "bot": {
+    "username": "botname",
+    "password": "oauth:abc123"
   },
-  "identity": {
-    "username": "mybotname",
-    "password": "oauth:abc123",
-    "host": "mychannel"
-  },
-  "channels": ["#mychannel"],
   "redis": {
     "host": "127.0.0.1",
     "port": 6379
@@ -20,5 +14,9 @@
   "mongo": {
     "url": "mongodb://localhost:27017",
     "dbName": "n3rdbot"
+  },
+  "options": {
+    "clientId": "abc123",
+    "logLevel": "error"
   }
 }
