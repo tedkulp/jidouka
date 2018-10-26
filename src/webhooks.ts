@@ -46,8 +46,8 @@ const webhookPost = async (req: Request, res: Response) => {
     const signature = req.header('X-Hub-Signature').split('=')[1];
     const followLink = req.header('Link') && req.header('Link').includes(topicUrls['follow']);
     const onlineLink = req.header('Link') && req.header('Link').includes(topicUrls['online']);
-    const sigValid = crypto.createHmac('sha256', SECRET).update(req.body).digest('hex') === signature;
-    const body: any = req.body && JSON.parse(req.body);
+    const sigValid = crypto.createHmac('sha256', SECRET).update(req['rawBody']).digest('hex') === signature;
+    const body = req.body;
 
     if ((followLink || onlineLink) && sigValid) {
         const dataBlob = _.get(body, 'data.0');
