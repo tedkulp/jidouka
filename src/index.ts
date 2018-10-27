@@ -1,10 +1,12 @@
 import _ from 'lodash';
 import express from 'express';
+import { createServer } from 'http';
 import bodyParser from "body-parser";
 import { decorateApp } from '@awaitjs/express';
 
 import client from './client';
 import commands from './commands';
+import io from './io';
 
 import { getClient, getDb } from './servers/mongo';
 import state from './state';
@@ -23,6 +25,8 @@ process.on('SIGINT', function () {
     const db = await getDb();
 
     const app: any = decorateApp(express());
+    const http = createServer(app);
+
     app.use(bodyParser.json({
         verify: (req, res, buf, encoding) => {
             if (buf && buf.length) {
@@ -31,13 +35,17 @@ process.on('SIGINT', function () {
         },
     }));
 
-    commands.init();
-    state.init();
+    io.init(http);
     webhooks.init(app);
 
-    client.connect();
+    _.delay(() => {
+        commands.init();
+        state.init();
 
-    app.listen(process.env.port || 4000, () => {
+        client.connect();
+    }, 5000);
+
+    http.listen(process.env.port || 4000, () => {
         console.log("now listening for requests on port 4000");
     });
 })();

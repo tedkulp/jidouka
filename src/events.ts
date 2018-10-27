@@ -1,5 +1,6 @@
 import { Set, hash } from 'immutable';
 import logger from './logger';
+import io from './io';
 
 type EventCallback = (details: Object, description?: string) => void;
 
@@ -29,6 +30,7 @@ class EventDefinition {
     trigger(details: Object): void {
         logger.info(['event triggered', this.eventName, this.description, details]);
         this.listeners.forEach(fn => fn(details, this.description));
+        io.broadcast(this.eventName, details);
     }
 
     equals(v: EventDefinition): boolean {
@@ -92,5 +94,4 @@ class EventManager {
     }
 }
 
-const mgr = new EventManager();
-export default mgr;
+export default new EventManager();
