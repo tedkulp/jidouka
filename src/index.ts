@@ -4,11 +4,12 @@ import { createServer } from 'http';
 import bodyParser from "body-parser";
 import { decorateApp } from '@awaitjs/express';
 
+import { getClient, getDb } from './servers/mongo';
+
 import client from './client';
 import commands from './commands';
 import io from './io';
 
-import { getClient, getDb } from './servers/mongo';
 import state from './state';
 import webhooks from './webhooks';
 
@@ -38,6 +39,7 @@ process.on('SIGINT', function () {
     io.init(http);
     webhooks.init(app);
 
+    // TODO: Remove this delay... it's for testing events
     _.delay(() => {
         commands.init();
         state.init();

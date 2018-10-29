@@ -5,6 +5,8 @@ import { get } from 'lodash';
 import log from './logger';
 import state from './state';
 import config from '../config/config.json';
+import { UserModel } from './models/user';
+import logger from './logger';
 
 const axios = setup({
     cache: {
@@ -55,8 +57,34 @@ const getOnlineStartTime = async () : Promise<moment.Moment | null> => {
     return null;
 };
 
-const getUserId = async (username?: string) => {
+const getUserDetails = async (username?: string) => {
     // TODO: Look it up in the database first
+    let foundUser = await UserModel.findOne({
+        'username': username
+    });
+    logger.info(['foundUser', foundUser]);
+
+    if (foundUser) {
+        return foundUser;
+    } else {
+        // We have a newbie, folks!
+        const apiUser = await getUserDetailsFromApi(username);
+        if (apiUser) {
+            // We has api data, create a model in the database
+            // and then return it
+            return UserModel.create({
+                twitchId: apiUser['id'],
+                username: apiUser['login'],
+                displayName: apiUser['display_name'],
+                watchedTime: 0,
+            });
+        }
+    }
+
+    return null;
+};
+
+const getUserDetailsFromApi = async (username?: string) => {
     try {
         const response = await axios.get('https://api.twitch.tv/helix/users', {
             headers: {
@@ -71,9 +99,18 @@ const getUserId = async (username?: string) => {
 
         state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
 
-        return get(response, 'data.data[0].id', null);
+        return get(response, 'data.data[0]', null);
     } catch (e) {
         log.error(e); // TODO: Finalize API handling
+    }
+
+    return null;
+};
+
+const getUserId = async (username?: string) => {
+    const details = await getUserDetails(username);
+    if (details) {
+        return details.twitchId;
     }
 
     return null;
@@ -83,5 +120,6 @@ export default {
     getStreamData,
     getOnlineStatus,
     getOnlineStartTime,
+    getUserDetails,
     getUserId,
 };

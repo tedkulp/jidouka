@@ -1,13 +1,14 @@
 import { Set, hash } from 'immutable';
 import logger from './logger';
 import io from './io';
+import _ from 'lodash';
 
 type EventCallback = (details: Object, description?: string) => void;
 
 class EventDefinition {
     eventName: string;
     description: string;
-    listeners: Set<EventCallback>;
+    listeners: Set<EventCallback> = Set();
 
     constructor(eventName: string, description: string) {
         this.eventName = eventName;
@@ -29,7 +30,7 @@ class EventDefinition {
 
     trigger(details: Object): void {
         logger.info(['event triggered', this.eventName, this.description, details]);
-        this.listeners.forEach(fn => fn(details, this.description));
+        this.listeners.forEach(fn => _.defer((details, description) => fn(details, description), [details, this.description]));
         io.broadcast(this.eventName, details);
     }
 
@@ -45,17 +46,29 @@ class EventDefinition {
 class EventManager {
     events: Set<EventDefinition>;
 
-    register(group: string, eventName: string, description: string): void {
+    register(group: string, eventName: string, description: string): EventDefinition {
         this.events = this.events || Set();
-        this.events = this.events.add(new EventDefinition(this.createEventName(group, eventName), description));
-        // console.log(this.events.toJSON());
+
+        let event: EventDefinition = this.getDefinition(group, eventName);
+        if (!event) {
+            event = new EventDefinition(this.createEventName(group, eventName), description);
+            this.events = this.events.add(event);
+        } else {
+            event.description = description;
+        }
+
+        console.log(this.events.toJSON());
+
+        return event;
     }
 
     addListener(group: string, eventName: string, fn: EventCallback): void {
-        const event: EventDefinition = this.getDefinition(group, eventName);
-        if (event) {
-            event.addListener(fn);
+        let event: EventDefinition = this.getDefinition(group, eventName);
+        if (!event) {
+            event = this.register(group, eventName, '');
         }
+
+        event.addListener(fn);
     }
 
     removeListener(group: string, eventName: string, fn: EventCallback): void {
@@ -86,6 +99,7 @@ class EventManager {
     }
 
     getDefinition(group: string, eventName: string): EventDefinition {
+        this.events = this.events || Set();
         return this.events.find(event => event.eventName === this.createEventName(group, eventName));
     }
 
