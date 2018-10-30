@@ -57,8 +57,6 @@ class EventManager {
             event.description = description;
         }
 
-        console.log(this.events.toJSON());
-
         return event;
     }
 

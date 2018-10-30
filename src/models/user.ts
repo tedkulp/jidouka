@@ -5,6 +5,7 @@ export interface IUser {
     username?: string;
     displayName?: string;
     watchedTime: number;
+    followDate: Date;
 }
 
 export interface IUserModel extends IUser, mongoose.Document {
@@ -15,6 +16,7 @@ export const UserSchema: mongoose.Schema = new mongoose.Schema({
     username: { type: String, required: true }, // Not unique in weird cases of username switches
     displayName: { type: String },
     watchedTime: { type: Number, required: true, default: 0 },
+    followDate: { type: Date },
 }, {
     timestamps: true,
     collection: 'users',

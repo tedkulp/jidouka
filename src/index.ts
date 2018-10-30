@@ -3,10 +3,10 @@ import express from 'express';
 import { createServer } from 'http';
 import bodyParser from "body-parser";
 import { decorateApp } from '@awaitjs/express';
-
 import { getClient, getDb } from './servers/mongo';
 
 import client from './client';
+import apolloServer from './schema';
 import commands from './commands';
 import io from './io';
 
@@ -27,6 +27,8 @@ process.on('SIGINT', function () {
 
     const app: any = decorateApp(express());
     const http = createServer(app);
+
+    apolloServer.applyMiddleware({ app });
 
     app.use(bodyParser.json({
         verify: (req, res, buf, encoding) => {

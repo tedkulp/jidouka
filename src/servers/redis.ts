@@ -4,7 +4,7 @@ import config from '../../config/config.json';
 import log from '../logger';
 
 export interface IPromisifedRedisClient extends Redis.RedisClient {
-    [x: string]: any
+    [x: string]: any,
 }
 
 const client = Redis.createClient(config.redis);

@@ -18,6 +18,9 @@ import { mainListItems } from './listItems';
 import SimpleLineChart from './SimpleLineChart';
 import SimpleTable from './SimpleTable';
 
+import DashboardIndex from '../Dashboard';
+import ViewersIndex from '../Viewers';
+
 const drawerWidth = 240;
 
 const styles = theme => ({
@@ -135,11 +138,11 @@ class Dashboard extends React.Component {
               </IconButton>
               <Typography
                 component="h1"
-                variant="h6"
+                variant="h5"
                 color="inherit"
                 noWrap
                 className={classes.title}>
-                N3rdbot Dashboard
+                自動化 Dashboard
               </Typography>
               <IconButton color="inherit">
                 <Badge badgeContent={4} color="secondary">
@@ -167,18 +170,20 @@ class Dashboard extends React.Component {
           </Drawer>
           <main className={classes.content}>
             <div className={classes.appBarSpacer} />
-            <Typography variant="h4" gutterBottom component="h2">
+            {/* <Typography variant="h4" gutterBottom component="h2">
               Orders
             </Typography>
             <Typography component="div" className={classes.chartContainer}>
               <SimpleLineChart />
-            </Typography>
-            <Typography variant="h4" gutterBottom component="h2">
+            </Typography> */}
+            {/* <Typography variant="h4" gutterBottom component="h2">
               Products
             </Typography>
             <div className={classes.tableContainer}>
               <SimpleTable />
-            </div>
+            </div> */}
+            <DashboardIndex />
+            <ViewersIndex />
           </main>
         </div>
       </React.Fragment>
