@@ -1,12 +1,22 @@
 import * as React from 'react';
-import { Route } from 'react-router';
+import * as _ from 'lodash';
+import { Route, withRouter } from 'react-router';
 
 import Dashboard from './Dashboard';
 
-export default function() {
-  return (
-    <div>
-      <Route path='/' exact={true} component={Dashboard} />
-    </div>
-  );
-};
+class DashboardIndex extends React.Component<any> {
+
+    public getDisplayValue() {
+        return _.get(this.props, 'location.pathname', '') === '/' ? 'block' : 'none';
+    }
+
+    public render() {
+        return (
+            <div style={{ display: this.getDisplayValue() }}>
+                <Route path='/' component={Dashboard} />
+            </div>
+        );
+    }
+}
+
+export default withRouter(DashboardIndex);
