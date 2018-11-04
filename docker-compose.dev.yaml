@@ -1,0 +1,38 @@
+version: '3'
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - "./data/mongo:/data/db"
+  redis:
+    image: redis
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - "./data/redis:/data"
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     MONGO_URL: "mongodb://mongo:27017"
+  #     REDIS_HOST: "redis"
+  #   depends_on:
+  #     - mongo
+  #     - redis
+  # frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: Dockerfile
+  nginx:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.nginx.dev
+    ports:
+      - "80:80"
+    # depends_on:
+    #   - frontend
+    #   - backend

@@ -1,0 +1,47 @@
+
+Todo:
+  Authentication/User:
+    ☐ Real Oauth
+      * So we have all the tokens available
+      * We're going to need them for some of the lookup commands like !subs
+      ☐ Bot
+      ☐ Broadcaster
+    ✔ Last seen date @done(18-11-02 07:01)
+      * Update every time we update the watched time
+      * We just use updatedAt as our last seen date
+      * Just make sure all updates outside of the orm update updatedAt timestamp
+    ✔ Number of messages @done(18-11-02 07:01)
+      * Update db onMessage
+    ☐ Follow Date
+    ☐ Import list of followers on startup?
+  Extensions:
+    ☐ Create loader
+      * Make sure loader can load from easily dockerable directory
+    ☐ Query Commands
+      ☐ !subs
+      ☐ !followage
+      ☐ !followers
+      ☐ !lastseen
+      ☐ !age (total age of account from api)
+      ☐ !watched (watched time)
+      ☐ !messages (number of messages sent for user)
+      ☐ !me (Summary of !followage, !messages)
+    ☐ Moderation
+      ☐ General
+        * # warnings
+        * Clear chat (1s timeout)?
+      ☐ Links
+      ☐ Symbols
+      ☐ Caps
+      ☐ Long Messages
+  Communication:
+    ☐ Look into the websocket API for moderation (because of Unban)
+    ☐ tmi.js is dead. Look for alternatives @low
+  Overlays:
+    * We can continue using Streamlabs until we sort this out
+    ☐ Follows
+    ☐ Subscriptions
+    ☐ Extra Life
+    ☐ Event List
+  Nice Things:
+    ☐ Look into Spotify API

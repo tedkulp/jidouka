@@ -13,3 +13,26 @@ services:
       - "6379:6379"
     volumes:
       - "./data/redis:/data"
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      MONGO_URL: "mongodb://mongo:27017"
+      REDIS_HOST: "redis"
+    depends_on:
+      - mongo
+      - redis
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+  nginx:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend

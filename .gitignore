@@ -1,6 +1,6 @@
-node_modules
-data
+node_modules/
+data/
 config/config.json
-flow-typed
 .vscode
 yarn-error.log
+*.code-workspace
