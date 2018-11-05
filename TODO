@@ -1,27 +1,29 @@
 
 Todo:
   Authentication/User:
-    ☐ Real Oauth
+    ✔ Real Oauth @done(18-11-05 06:16)
       * So we have all the tokens available
       * We're going to need them for some of the lookup commands like !subs
-      ☐ Bot
-      ☐ Broadcaster
+      ✔ Bot @done(18-11-05 06:16)
+      ✔ Broadcaster @done(18-11-05 06:16)
     ✔ Last seen date @done(18-11-02 07:01)
       * Update every time we update the watched time
       * We just use updatedAt as our last seen date
       * Just make sure all updates outside of the orm update updatedAt timestamp
     ✔ Number of messages @done(18-11-02 07:01)
-      * Update db onMessage
+    ☐ Refresh oauth tokens based on expires date
+    ☐ Use oauth tokens to grab current bot and streamer names
     ☐ Follow Date
     ☐ Import list of followers on startup?
   Extensions:
-    ☐ Create loader
-      * Make sure loader can load from easily dockerable directory
+    ✔ Create loader @done(18-11-05 07:30)
+      ✔ Loader can load from easily dockerable directory @done(18-11-05 07:30)
     ☐ Query Commands
-      ☐ !subs
+      ✔ !subs @done(18-11-05 08:38)
       ☐ !followage
       ☐ !followers
-      ☐ !lastseen
+      ✔ !lastseen @done(18-11-05 08:38)
+        ☐ Add handling for invalid names
       ☐ !age (total age of account from api)
       ☐ !watched (watched time)
       ☐ !messages (number of messages sent for user)
@@ -44,4 +46,6 @@ Todo:
     ☐ Extra Life
     ☐ Event List
   Nice Things:
+    ☐ Node Cron?
     ☐ Look into Spotify API
+    ☐ Can we control the LED lights?

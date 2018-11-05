@@ -56,7 +56,7 @@ const addWatcher = async (channel: string, username: string, isMod: boolean = fa
     const userId = await api.getUserId(username);
     watchers = watchers.set(channel, watchers.get(channel).add(new Watcher(username, userId, isMod)));
 
-    logger.debug(watchers.get(channel).toJSON());
+    // logger.debug(watchers.get(channel).toJSON());
 };
 
 const removeWatcher = (channel: string, username: string): void => {
@@ -72,7 +72,7 @@ const removeWatcher = (channel: string, username: string): void => {
         watchers = watchers.set(channel, watchers.get(channel).remove(user));
     }
 
-    logger.debug(watchers.get(channel).toJSON());
+    // logger.debug(watchers.get(channel).toJSON());
 };
 
 const getWatchers = (channel: string): Array<Watcher> => {
@@ -95,7 +95,7 @@ const addMod = async (channel: string, username: string) => {
         addWatcher(channel, username, true);
     }
 
-    logger.debug(watchers.get(channel).toJSON());
+    // logger.debug(watchers.get(channel).toJSON());
 };
 
 const removeMod = (channel: string, username: string): void => {
@@ -108,7 +108,7 @@ const removeMod = (channel: string, username: string): void => {
         user.mod = false;
     }
 
-    logger.debug(watchers.get(channel).toJSON());
+    // logger.debug(watchers.get(channel).toJSON());
 };
 
 const getMods = (channel: string): Array<Watcher> => {

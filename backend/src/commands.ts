@@ -5,8 +5,8 @@ import events from './events';
 import client from './client';
 import log from './logger'
 
-type ResponseList = Array<string>;
-type CommandReponse = (args: string) => string | ResponseList;
+export type ResponseList = Array<string>;
+export type CommandReponse = (args: string, details: any) => Promise<string | ResponseList> | string | ResponseList;
 
 class CommandManager {
     commands: OrderedMap<string, CommandReponse> = OrderedMap();
@@ -20,7 +20,7 @@ class CommandManager {
         log.info(['registered command', commandName]);
     }
 
-    chatHandler(details: any) {
+    async chatHandler(details: any) {
         // details: { channel, userstate, message }
         if (details && details.message) {
             const foundCmd = this.commands
@@ -28,7 +28,7 @@ class CommandManager {
                 .findKey((val: CommandReponse, key: string) => details.message.startsWith(key));
             if (foundCmd) {
                 const foundCmdFn = this.commands.get(foundCmd);
-                const result = foundCmdFn(details.message.replace(`${foundCmd} `, ''));
+                const result = await foundCmdFn(details.message.replace(`${foundCmd} `, ''), details);
                 if (typeof result === 'string') {
                     client.say(details.channel, result);
                 } else if (result && result.forEach) { // Why do I have to check it this way?
@@ -44,19 +44,9 @@ class CommandManager {
 
 const mgr = new CommandManager();
 
-mgr.register('!time', (args: string): string => {
+mgr.register('!time', (args: string, details: any) => {
     const time = moment().format('h:mm:ss A');
     return `Streamer's current time is: ${time}`;
 });
-
-mgr.register('!time utc', (args: string): string => {
-    const time = moment.utc().format('h:mm:ss A');
-    return `Streamer's current time in UTC is: ${time}`;
-});
-
-// mgr.register('abc', (args: string): Array<string> => {
-//     console.log('abc args', args);
-//     return new Array('a', 'b', 'c');
-// });
 
 export default mgr;

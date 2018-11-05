@@ -7,6 +7,8 @@ export interface IUser {
     watchedTime: number;
     followDate: Date;
     numMessages: number;
+    updatedAt: Date,
+    createdAt: Date,
 }
 
 export interface IUserModel extends IUser, mongoose.Document {
@@ -18,7 +20,6 @@ export const UserSchema: mongoose.Schema = new mongoose.Schema({
     displayName: { type: String },
     watchedTime: { type: Number, required: true, default: 0 },
     followDate: { type: Date },
-    lastSeen: { type: Date },
     numMessages: { type: Number, required: true, default: 0 },
 }, {
     timestamps: true,

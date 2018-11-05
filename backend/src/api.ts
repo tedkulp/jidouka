@@ -62,7 +62,7 @@ const getUserDetails = async (username?: string) => {
     let foundUser = await UserModel.findOne({
         'username': username
     });
-    logger.info(['foundUser', foundUser]);
+    // logger.info(['foundUser', foundUser]);
 
     if (foundUser) {
         return foundUser;

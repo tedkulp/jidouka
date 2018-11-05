@@ -11,6 +11,7 @@
     "bluebird": "^3.5.2",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "filehound": "^1.16.4",
     "graphql": "^14.0.2",
     "graphql-tag": "^2.10.0",
     "graphql-tools": "^4.0.2",

@@ -7,6 +7,7 @@ import apolloServer from './src/schema';
 import commands from './src/commands';
 import io from './src/io';
 import logger from './src/logger';
+import extensions from './src/extensions';
 import { init as oauthInit } from './src/oauth';
 
 import state from './src/state';
@@ -28,6 +29,7 @@ process.on('SIGINT', function () {
     io.init(http);
     webhooks.init(app);
     oauthInit();
+    extensions.init();
 
     // TODO: Remove this delay... it's for testing events
     _.delay(() => {
