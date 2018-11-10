@@ -11,22 +11,30 @@ Todo:
       * We just use updatedAt as our last seen date
       * Just make sure all updates outside of the orm update updatedAt timestamp
     ✔ Number of messages @done(18-11-02 07:01)
-    ☐ Refresh oauth tokens based on expires date
+    ✔ Refresh oauth tokens based on expires date @high @done(18-11-06 20:12)
+    ☐ Switch to https://github.com/swiftyspiffy/twitch-token-generator API so that we can use oauth for chat tokens
+    ☐ Start tracking bot user account token as well at app token
     ☐ Use oauth tokens to grab current bot and streamer names
     ☐ Follow Date
     ☐ Import list of followers on startup?
+  Panel:
+    ☐ Show/Set game
+    ☐ Show/Set Title
+    ☐ Set tags when it's available in the API
+    ☐ Show stream stats (current viewers / max viewers / chat messages / uptime)
+    ☐ Show channel stats (views / followers / # subs / etc)
   Extensions:
     ✔ Create loader @done(18-11-05 07:30)
       ✔ Loader can load from easily dockerable directory @done(18-11-05 07:30)
     ☐ Query Commands
       ✔ !subs @done(18-11-05 08:38)
       ☐ !followage
-      ☐ !followers
+      ✔ !followers @done(18-11-07 05:56)
       ✔ !lastseen @done(18-11-05 08:38)
         ☐ Add handling for invalid names
       ☐ !age (total age of account from api)
-      ☐ !watched (watched time)
-      ☐ !messages (number of messages sent for user)
+      ✔ !watched (watched time) @done(18-11-07 06:22)
+      ✔ !messages (number of messages sent for user) @done(18-11-07 06:16)
       ☐ !me (Summary of !followage, !messages)
     ☐ Moderation
       ☐ General

@@ -93,11 +93,13 @@ const subscribe = async () => {
 };
 
 const unsubscribe = async () => {
+    console.log('in unsubscribe');
     const userId = await api.getUserId(USERNAME);
     const topicUrls = getTopicUrls(userId);
 
-    _.values(topicUrls).forEach(async url => {
+    _.values(topicUrls).forEach(async (url) => {
         try {
+            console.log('Unsubbing: ' + url);
             await helixApi.post('webhooks/hub', {
                 'hub.mode': "unsubscribe",
                 'hub.callback': `${URL_BASE}/webhooks`,

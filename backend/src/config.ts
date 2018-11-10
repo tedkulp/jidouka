@@ -1,9 +1,13 @@
 import _ from 'lodash';
+import { v4 } from 'uuid';
+
+const STATE_TOKEN = v4();
 
 class Config {
 
     private _data = {};
     private _loaded = false;
+    private _stateToken = STATE_TOKEN;
 
     private loadData() {
         if (!this._loaded)  {
@@ -50,6 +54,7 @@ class Config {
                 clientSecret: this.getClientSecret(),
                 logLevel: this.getLogLevel(),
             },
+            stateToken: this.getStateToken(),
         };
     }
 
@@ -99,6 +104,10 @@ class Config {
 
     public getLogLevel(): string {
         return this.getValue('options.logLevel', 'LOG_LEVEL') || 'info';
+    }
+
+    public getStateToken(): string {
+        return this._stateToken;
     }
 }
 

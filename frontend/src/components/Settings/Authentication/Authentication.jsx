@@ -19,6 +19,7 @@ const GET_CONFIG = gql`
             hostname
             clientId
         }
+        stateToken
     }
 }`;
 
@@ -56,6 +57,7 @@ class Authentication extends React.Component {
         let url = 'https://id.twitch.tv/oauth2/authorize';
         url += `?client_id=${config.options.clientId}`;
         url += `&redirect_uri=${config.options.hostname}/oauth`;
+        url += `&state=${config.stateToken}`
         url += '&response_type=code&scope=channel_subscriptions+channel_check_subscription';
 
         return url;

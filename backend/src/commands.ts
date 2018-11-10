@@ -28,7 +28,7 @@ class CommandManager {
                 .findKey((val: CommandReponse, key: string) => details.message.startsWith(key));
             if (foundCmd) {
                 const foundCmdFn = this.commands.get(foundCmd);
-                const result = await foundCmdFn(details.message.replace(`${foundCmd} `, ''), details);
+                const result = await foundCmdFn(details.message.replace(`${foundCmd}`, '').trim(), details);
                 if (typeof result === 'string') {
                     client.say(details.channel, result);
                 } else if (result && result.forEach) { // Why do I have to check it this way?

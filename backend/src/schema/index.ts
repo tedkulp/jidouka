@@ -28,6 +28,7 @@ const typeDefs = gql`
         streamer: ConfigUser
         bot: ConfigUser
         options: ConfigOptions
+        stateToken: String
     }
 
     type Query {

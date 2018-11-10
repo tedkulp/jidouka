@@ -4,3 +4,4 @@ config/config.json
 .vscode
 yarn-error.log
 *.code-workspace
+.tmuxp.yaml

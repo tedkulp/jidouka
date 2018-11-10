@@ -9,7 +9,7 @@
     "concurrently": "^4.0.1"
   },
   "scripts": {
-    "dev": "pwd && concurrently \"pwd && docker-compose up\" \"pwd && cd frontend && BROWSER=none PORT=5000 yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\"",
-    "dev-build": "pwd && concurrently \"pwd && docker-compose up --build\" \"pwd && cd frontend && BROWSER=none PORT=5000 yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\""
+    "dev": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\"",
+    "dev-build": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up --build\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\""
   }
 }

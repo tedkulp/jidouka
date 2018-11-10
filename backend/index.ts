@@ -1,5 +1,6 @@
 import _ from 'lodash';
-import { init as mongoInit } from './src/servers/mongo';
+import { init as mongoInit, close as mongoClose } from './src/servers/mongo';
+import redis from './src/servers/redis';
 import { app, http } from './src/servers/express';
 
 import client from './src/client';
@@ -13,13 +14,36 @@ import { init as oauthInit } from './src/oauth';
 import state from './src/state';
 import webhooks from './src/webhooks';
 
+var shuttingDown = false;
+
 // Handle ctrl-c
-process.on('SIGINT', function () {
-    webhooks.unsubscribe();
+const shutdown = async () => {
+    if (!shuttingDown) {
+        shuttingDown = true;
+    } else {
+        return;
+    }
+
+    logger.info('Shutting down gracefully');
+
+    await webhooks.unsubscribe();
+
+    if (redis && redis.connected) {
+        redis.quit();
+    }
+
+    mongoClose();
 
     // Give webhooks 2.5 seconds to cleanly unsub
-    _.delay(process.exit, 2500);
-});
+    _.delay(() => {
+        http.close(() => {
+            process.exit();
+        });
+    }, 2500);
+}
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);
+process.on('SIGUSR2', shutdown);
 
 (async () => {
     // Just to force mongoose to init

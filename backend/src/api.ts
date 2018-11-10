@@ -7,6 +7,7 @@ import state from './state';
 import config from './config';
 import { UserModel } from './models/user';
 import logger from './logger';
+import redis from './servers/redis';
 
 const axios = setup({
     cache: {
@@ -58,7 +59,6 @@ const getOnlineStartTime = async () : Promise<moment.Moment | null> => {
 };
 
 const getUserDetails = async (username?: string) => {
-    // TODO: Look it up in the database first
     let foundUser = await UserModel.findOne({
         'username': username
     });
@@ -117,10 +117,42 @@ const getUserId = async (username?: string) => {
     return null;
 };
 
+const getStreamerFollowsData = async () => {
+    try {
+        const response = await axios.get('https://api.twitch.tv/helix/users/follows', {
+            headers: {
+                'Client-ID': config.getClientId(),
+            },
+            params: {
+                to_id: await redis.getAsync('streamer:twitch_id'),
+            },
+        });
+
+        log.debug(['response from cache', response.request.fromCache ? 'true' : 'false']);
+
+        state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
+
+        return get(response, 'data', null);
+    } catch (e) {
+        log.error(e); // TODO: Finalize API handling
+    }
+
+    return null;
+};
+
+// const getStreamerFollows = async () => {
+// };
+
+const getStreamerFollowCount = async () => {
+    const followData = await getStreamerFollowsData();
+    return get(followData, 'total', 0);
+};
+
 export default {
     getStreamData,
     getOnlineStatus,
     getOnlineStartTime,
     getUserDetails,
     getUserId,
+    getStreamerFollowCount,
 };
