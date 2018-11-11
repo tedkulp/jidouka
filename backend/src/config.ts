@@ -49,6 +49,8 @@ class Config {
                 dbName: this.getMongoDbName(),
             },
             options: {
+                panelUser: this.getPanelUser(),
+                panelPass: this.getPanelPass(),
                 hostname: this.getHostname(),
                 clientId: this.getClientId(),
                 clientSecret: this.getClientSecret(),
@@ -108,6 +110,14 @@ class Config {
 
     public getStateToken(): string {
         return this._stateToken;
+    }
+
+    public getPanelUser(): string {
+        return this.getValue('options.panelUser', 'PANEL_USER');
+    }
+
+    public getPanelPass(): string {
+        return this.getValue('options.panelPass', 'PANEL_PASS');
     }
 }
 

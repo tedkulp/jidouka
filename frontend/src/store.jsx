@@ -4,7 +4,7 @@ import reducer from './reducer';
 import { connectRouter, routerMiddleware } from 'connected-react-router';
 import logger from 'redux-logger';
 import createHistory from 'history/createBrowserHistory';
-// import socket from './util/socket';
+import socket from './util/socket';
 
 export function createStore(historyObj, client, data) {
     const composeEnhancers = window['__REDUX_DEVTOOLS_EXTENSION_COMPOSE__'] || compose;

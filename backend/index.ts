@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import { init as mongoInit, close as mongoClose } from './src/servers/mongo';
 import redis from './src/servers/redis';
-import { app, http } from './src/servers/express';
+import { app, http, shutdownManager } from './src/servers/express';
+import expressHttpProxy from 'express-http-proxy';
 
 import client from './src/client';
 import apolloServer from './src/schema';
@@ -36,9 +37,14 @@ const shutdown = async () => {
 
     // Give webhooks 2.5 seconds to cleanly unsub
     _.delay(() => {
-        http.close(() => {
-            process.exit();
+        shutdownManager.terminate(() => {
+            process.exit(0);
         });
+
+        setTimeout(() => {
+            console.error('Could not close connections in time, forcefully shutting down');
+            process.exit(1);
+        }, 5000);
     }, 2500);
 }
 process.on('SIGINT', shutdown);
@@ -56,12 +62,16 @@ process.on('SIGUSR2', shutdown);
     extensions.init();
 
     // TODO: Remove this delay... it's for testing events
-    _.delay(() => {
+    // _.delay(() => {
         commands.init();
         state.init();
 
         client.connect();
-    }, 5000);
+    // }, 5000);
+
+    // Last, so that everything that's not caught goes to the frontend
+    // TODO: Make this configurable
+    app.use(expressHttpProxy('localhost:3000'));
 
     const port = process.env.port || 4000;
     http.listen(port, () => {

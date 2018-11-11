@@ -16,6 +16,8 @@
     "dbName": "n3rdbot"
   },
   "options": {
+    "panelUser": "admin",
+    "panelPass": "admin",
     "hostname": "http://myhostname",
     "clientId": "abc123",
     "logLevel": "error"

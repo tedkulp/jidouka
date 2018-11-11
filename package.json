@@ -6,7 +6,9 @@
   "author": "Ted Kulp <ted@tedkulp.com>",
   "license": "MIT",
   "dependencies": {
-    "concurrently": "^4.0.1"
+    "concurrently": "^4.0.1",
+    "express-basic-auth": "^1.1.6",
+    "express-http-proxy": "^1.5.0"
   },
   "scripts": {
     "dev": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\"",
