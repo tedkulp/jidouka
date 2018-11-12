@@ -8,6 +8,27 @@ class Config {
     private _data = {};
     private _loaded = false;
     private _stateToken = STATE_TOKEN;
+    private _streamerScopes = [
+        'chat:edit',
+        'chat:read',
+        'whispers:read',
+        'whispers:edit',
+        'channel_subscriptions',
+        'channel_check_subscription',
+    ];
+
+    private _botScopes = [
+        'channel:moderate',
+        'chat:edit',
+        'chat:read',
+        'whispers:read',
+        'whispers:edit',
+        'channel_editor',
+        'channel_commercial',
+        'clips:edit',
+        'user:edit:broadcast',
+        'user:read:broadcast',
+    ];
 
     private loadData() {
         if (!this._loaded)  {
@@ -55,6 +76,10 @@ class Config {
                 clientId: this.getClientId(),
                 clientSecret: this.getClientSecret(),
                 logLevel: this.getLogLevel(),
+            },
+            scopes: {
+                streamer: this.getStreamerScopes(),
+                bot: this.getBotScopes(),
             },
             stateToken: this.getStateToken(),
         };
@@ -118,6 +143,14 @@ class Config {
 
     public getPanelPass(): string {
         return this.getValue('options.panelPass', 'PANEL_PASS');
+    }
+
+    public getStreamerScopes(): string[] {
+        return this._streamerScopes;
+    }
+
+    public getBotScopes(): string[] {
+        return this._botScopes;
     }
 }
 

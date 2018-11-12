@@ -54,19 +54,15 @@ process.on('SIGUSR2', shutdown);
     // Just to force mongoose to init
     mongoInit();
 
+    // Init ALL the things!
     apolloServer.applyMiddleware({ app });
     io.init(http);
     webhooks.init(app);
     oauthInit();
     extensions.init();
-
-    // TODO: Remove this delay... it's for testing events
-    // _.delay(() => {
-        commands.init();
-        state.init();
-
-        client.connect();
-    // }, 5000);
+    commands.init();
+    state.init();
+    client.connect();
 
     // Last, so that everything that's not caught goes to the frontend
     app.use(proxy);

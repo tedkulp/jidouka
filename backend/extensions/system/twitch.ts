@@ -30,7 +30,7 @@ const formatSeconds = (totalSeconds) => {
 }
 
 commands.register('!subs', async (args: string, details: any): Promise<string> => {
-    // TODO: Check to see if they're partner/affiliate before bothering
+    // TODO: Check to see if they're partner/affiliate before bothering using broadcaster_type from redis
 
     try {
         const clientId = config.getClientId();

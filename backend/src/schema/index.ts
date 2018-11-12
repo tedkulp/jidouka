@@ -24,11 +24,17 @@ const typeDefs = gql`
         clientId: String
     }
 
+    type ConfigScopes {
+        streamer: [String]
+        bot: [String]
+    }
+
     type Config {
         streamer: ConfigUser
         bot: ConfigUser
         options: ConfigOptions
         stateToken: String
+        scopes: ConfigScopes
     }
 
     type Query {

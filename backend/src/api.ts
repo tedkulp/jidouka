@@ -108,6 +108,26 @@ const getUserDetailsFromApi = async (username?: string) => {
     return null;
 };
 
+const getUserDetailsFromToken = async (token: string) => {
+    try {
+        const response = await axios.get('https://api.twitch.tv/helix/users', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        log.debug(['response from cache', response.request.fromCache ? 'true' : 'false']);
+
+        state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
+
+        return get(response, 'data.data[0]', null);
+    } catch (e) {
+        log.error(e); // TODO: Finalize API handling
+    }
+
+    return null;
+}
+
 const getUserId = async (username?: string) => {
     const details = await getUserDetails(username);
     if (details) {
@@ -153,6 +173,7 @@ export default {
     getOnlineStatus,
     getOnlineStartTime,
     getUserDetails,
+    getUserDetailsFromToken,
     getUserId,
     getStreamerFollowCount,
 };
