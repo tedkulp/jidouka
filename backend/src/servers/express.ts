@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import bodyParser from "body-parser";
 import basicAuth from 'express-basic-auth';
 import { decorateApp } from '@awaitjs/express';
+import proxyMiddleware from 'http-proxy-middleware';
 import { GracefulShutdownManager } from '@moebius/http-graceful-shutdown';
 import config from '../config';
 
@@ -17,6 +18,17 @@ app.use(bodyParser.json({
         }
     },
 }));
+
+// TODO: Make this configurable
+const filter = (pathname, req) => {
+    // console.log(pathname, pathname.match('socket.io'));
+    return !pathname.match('socket.io');
+};
+
+export const proxy = proxyMiddleware(filter, {
+    target: 'http://localhost:3000', // target host
+    ws: true,                        // proxy websockets
+});
 
 if (config.getPanelUser() && config.getPanelPass()) {
     var middleware = basicAuth({

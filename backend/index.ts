@@ -1,8 +1,7 @@
 import _ from 'lodash';
 import { init as mongoInit, close as mongoClose } from './src/servers/mongo';
 import redis from './src/servers/redis';
-import { app, http, shutdownManager } from './src/servers/express';
-import expressHttpProxy from 'express-http-proxy';
+import { app, http, shutdownManager, proxy } from './src/servers/express';
 
 import client from './src/client';
 import apolloServer from './src/schema';
@@ -70,8 +69,7 @@ process.on('SIGUSR2', shutdown);
     // }, 5000);
 
     // Last, so that everything that's not caught goes to the frontend
-    // TODO: Make this configurable
-    app.use(expressHttpProxy('localhost:3000'));
+    app.use(proxy);
 
     const port = process.env.port || 4000;
     http.listen(port, () => {
