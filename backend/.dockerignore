@@ -1,5 +1,2 @@
-.vscode
-client
-data
-frontend
-node_modules
+node_modules/
+config/config.json

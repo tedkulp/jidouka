@@ -30,6 +30,10 @@ export const proxy = proxyMiddleware(filter, {
     ws: true,                        // proxy websockets
 });
 
+export const staticServer = (dir) => {
+    return express.static(dir);
+};
+
 if (config.getPanelUser() && config.getPanelPass()) {
     var middleware = basicAuth({
         challenge: true,

@@ -1,5 +1,7 @@
 import { combineReducers } from 'redux';
 
+import { reducer } from './components/redux';
+
 export default combineReducers({
-    // Add reducers here -- it will cause a warning by default
+    status: reducer,
 });

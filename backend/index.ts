@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import { init as mongoInit, close as mongoClose } from './src/servers/mongo';
 import redis from './src/servers/redis';
-import { app, http, shutdownManager, proxy } from './src/servers/express';
+import { app, http, shutdownManager, proxy, staticServer } from './src/servers/express';
+import fs from 'fs';
 
 import client from './src/client';
 import apolloServer from './src/schema';
@@ -65,7 +66,12 @@ process.on('SIGUSR2', shutdown);
     client.connect();
 
     // Last, so that everything that's not caught goes to the frontend
-    app.use(proxy);
+    const clientDir = `${__dirname}/client`;
+    if (fs.existsSync(clientDir)) {
+        app.use(staticServer(clientDir));
+    } else {
+        app.use(proxy);
+    }
 
     const port = process.env.port || 4000;
     http.listen(port, () => {

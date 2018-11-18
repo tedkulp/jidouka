@@ -1,12 +1,9 @@
-import moment from 'moment';
 import { setup } from 'axios-cache-adapter';
 import { get, assign } from 'lodash';
-import { inspect } from 'util';
 
 import state from './state';
 import config from './config';
 import { UserModel } from './models/user';
-import logger from './logger';
 import redis from './servers/redis';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 
@@ -26,16 +23,16 @@ const axiosLongCache = setup({
 }) as AxiosInstance;
 
 export enum RequestAuthType {
-    NONE,
-    CLIENT,
-    BOT_OAUTH,
-    STREAMER_OAUTH,
+    NONE = 'NONE',
+    CLIENT = 'CLIENT',
+    BOT_OAUTH = 'BOT_OAUTH',
+    STREAMER_OAUTH = 'STREAMER_OAUTH',
 };
 
 export enum RequestCacheType {
-    NONE,
-    SHORT,
-    LONG,
+    NONE = 'NONE',
+    SHORT = 'SHORT',
+    LONG = 'LONG',
 };
 
 export const makeHelixRequest = async (requestConfig: AxiosRequestConfig, authType = RequestAuthType.CLIENT, cacheType = RequestCacheType.SHORT) => {
@@ -72,7 +69,7 @@ export const makeHelixRequest = async (requestConfig: AxiosRequestConfig, authTy
     return response;
 };
 
-export const makeKrakenRequest = async (requestConfig: AxiosRequestConfig, authType = RequestAuthType.CLIENT, allowCache = true) => {
+export const makeKrakenRequest = async (requestConfig: AxiosRequestConfig, authType = RequestAuthType.CLIENT, cacheType = RequestCacheType.SHORT) => {
     requestConfig = assign({}, {
         baseURL: 'https://api.twitch.tv/kraken',
         headers: {},
@@ -92,12 +89,16 @@ export const makeKrakenRequest = async (requestConfig: AxiosRequestConfig, authT
             break;
     };
 
-    const response = allowCache ? await axiosCache(requestConfig) : axios(requestConfig);
-    setApiLimits(authType, response);
-
-    if (allowCache) {
-        logger.debug(['response from cache', (response as any).request.fromCache ? 'true' : 'false']);
+    let fn: Function = axios;
+    if (cacheType == RequestCacheType.SHORT) {
+        fn = axiosCache;
+    } else if (cacheType == RequestCacheType.LONG) {
+        fn = axiosLongCache;
     }
+
+    const response = await fn(requestConfig);
+
+    setApiLimits(authType, response);
 
     return response;
 };
@@ -105,18 +106,8 @@ export const makeKrakenRequest = async (requestConfig: AxiosRequestConfig, authT
 const setApiLimits = (authType, response) => {
     const h = response.headers;
     console.log('authType', authType);
-    switch (authType) {
-        case RequestAuthType.BOT_OAUTH:
-            state.setApiLimit('BOT', h['ratelimit-limit'], h['ratelimit-remaining'], h['ratelimit-reset']);
-            break;
-        case RequestAuthType.STREAMER_OAUTH:
-            state.setApiLimit('STREAMER', h['ratelimit-limit'], h['ratelimit-remaining'], h['ratelimit-reset']);
-            break;
-        case RequestAuthType.CLIENT:
-            state.setApiLimit('CLIENT', h['ratelimit-limit'], h['ratelimit-remaining'], h['ratelimit-reset']);
-            break;
-        default:
-            state.setApiLimit('NONE', h['ratelimit-limit'], h['ratelimit-remaining'], h['ratelimit-reset']);
+    if (h['ratelimit-limit'] && h['ratelimit-remaining'] && h['ratelimit-reset']) {
+        state.setApiLimit(authType, h['ratelimit-limit'], h['ratelimit-remaining'], h['ratelimit-reset']);
     }
 }
 
@@ -124,8 +115,7 @@ export const getStreamData = async () => {
     const response = await makeHelixRequest({
         url: '/streams',
         params: {
-            // user_login: config.getStreamerName(),
-            user_login: 'pixelogicdev',
+            user_login: config.getStreamerName(),
         },
     });
 

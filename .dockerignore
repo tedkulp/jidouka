@@ -1,4 +1,10 @@
+.git/**/*
+.git
+.vscode/**/*
 .vscode
-client
-data
-frontend
+data/**/*
+data/
+**/node_modules/**/*
+**/node_modules/
+node_modules
+backend/config/config.json
