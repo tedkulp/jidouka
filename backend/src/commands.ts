@@ -2,7 +2,7 @@ import { OrderedMap } from 'immutable';
 import moment from 'moment';
 
 import events from './events';
-import client from './client';
+import { client, isConnected } from './client';
 import log from './logger'
 
 export type ResponseList = Array<string>;
@@ -30,10 +30,14 @@ class CommandManager {
                 const foundCmdFn = this.commands.get(foundCmd);
                 const result = await foundCmdFn(details.message.replace(`${foundCmd}`, '').trim(), details);
                 if (typeof result === 'string') {
-                    client.say(details.channel, result);
+                    if (isConnected()) {
+                        client.say(details.channel, result);
+                    }
                 } else if (result && result.forEach) { // Why do I have to check it this way?
                     result.forEach(line => {
-                        client.say(details.channel, line);
+                        if (isConnected()) {
+                            client.say(details.channel, line);
+                        }
                     });
                 }
             }

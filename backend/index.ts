@@ -4,7 +4,7 @@ import redis from './src/servers/redis';
 import { app, http, shutdownManager, proxy, staticServer } from './src/servers/express';
 import fs from 'fs';
 
-import client from './src/client';
+import { connect as client } from './src/client';
 import apolloServer from './src/schema';
 import commands from './src/commands';
 import io from './src/io';
@@ -63,7 +63,6 @@ process.on('SIGUSR2', shutdown);
     extensions.init();
     commands.init();
     state.init();
-    client.connect();
 
     // Last, so that everything that's not caught goes to the frontend
     const clientDir = `${__dirname}/client`;
@@ -77,4 +76,7 @@ process.on('SIGUSR2', shutdown);
     http.listen(port, () => {
         logger.info(`now listening for requests on port ${port}`);
     });
+
+    // Now connect to chat (which might not happen right away)
+    client();
 })();

@@ -1,11 +1,6 @@
 {
   "streamer": {
     "username": "streamername",
-    "password": "oauth:abc123"
-  },
-  "bot": {
-    "username": "botname",
-    "password": "oauth:abc123"
   },
   "redis": {
     "host": "127.0.0.1",
@@ -13,13 +8,14 @@
   },
   "mongo": {
     "url": "mongodb://localhost:27017",
-    "dbName": "n3rdbot"
+    "dbName": "jidouka"
   },
   "options": {
     "panelUser": "admin",
     "panelPass": "admin",
     "hostname": "http://myhostname",
     "clientId": "abc123",
+    "clientSecret": "abc123",
     "logLevel": "error"
   }
 }

@@ -5,6 +5,7 @@ import watchers from './watchers';
 import events from './events';
 import config from './config';
 import logger from './logger';
+import redis from './servers/redis';
 
 events.register('chat', 'join', 'User joined channel');
 events.register('chat', 'part', 'User parted channel');
@@ -18,176 +19,187 @@ events.register('chat', 'message', 'Message in channel');
 events.register('chat', 'ban', 'Someone banned in channel');
 events.register('chat', 'timeout', 'Someone timed out in channel');
 
-const client = new tmi.client({
-    "options": {
-        "debug": _.includes(['debug', 'verbose', 'silly'], config.getLogLevel()),
-        "clientId": config.getClientId(),
-    },
-    "connection": {
-        "reconnect": true,
-    },
-    "identity": {
-        "username": config.getBotName(),
-        "password": config.getBotPassword(),
-    },
-    "channels": [`#${config.getStreamerName()}`],
-});
+export let client = null;
 
-client.on('join', (channel, username, self) => {
-    // console.log('join', channel, username);
-    watchers.addWatcher(channel, username);
-    events.trigger('chat', 'join', {
-        channel,
-        username,
-        self,
-    });
-    // console.log(watchers.getWatchers(channel));
-});
+export function isConnected() {
+    return client !== null;
+};
 
-client.on('part', (channel, username, self) => {
-    // console.log('part', channel, username);
-    watchers.removeWatcher(channel, username);
-    events.trigger('chat', 'part', {
-        channel,
-        username,
-        self,
-    });
-    // console.log(watchers.getWatchers(channel));
-});
+export async function connect() {
+    const clientConfig = {
+        "options": {
+            "debug": _.includes(['debug', 'verbose', 'silly'], config.getLogLevel()),
+            "clientId": config.getClientId(),
+        },
+        "connection": {
+            "reconnect": true,
+        },
+        "identity": {
+            "username": await redis.getAsyncWhenAvailable('bot:username'),
+            "password": "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token'),
+        },
+        "channels": [`#${await redis.getAsyncWhenAvailable('streamer:username')}`],
+    };
 
-client.on('names', (channel, usernames) => {
-    logger.info(['names', channel, usernames]);
-    _.each(usernames, username => {
+    console.log('clientConfig', clientConfig);
+    client = new tmi.client(clientConfig);
+
+    client.on('join', (channel, username, self) => {
+        // console.log('join', channel, username);
         watchers.addWatcher(channel, username);
-        //TODO: Send event?
+        events.trigger('chat', 'join', {
+            channel,
+            username,
+            self,
+        });
+        // console.log(watchers.getWatchers(channel));
     });
-    // console.log(watchers.getWatchers(channel));
-});
 
-client.on('roomstate', (channel, state) => {
-    logger.info(['roomstate', channel, state]);
-    client.mods(channel);
-});
-
-client.on('subscription', (channel, username, method, message, userstate) => {
-    // console.log('subscription', channel, username, method, message, userstate);
-    events.trigger('chat', 'sub', {
-        channel,
-        username,
-        method,
-        message,
-        userstate,
+    client.on('part', (channel, username, self) => {
+        // console.log('part', channel, username);
+        watchers.removeWatcher(channel, username);
+        events.trigger('chat', 'part', {
+            channel,
+            username,
+            self,
+        });
+        // console.log(watchers.getWatchers(channel));
     });
-});
 
-client.on('resub', (channel, username, months, message, userstate, methods) => {
-    // console.log('resub', channel, username, months, message, userstate, methods);
-    events.trigger('chat', 'resub', {
-        channel,
-        username,
-        months,
-        message,
-        userstate,
-        methods,
+    client.on('names', (channel, usernames) => {
+        logger.info(['names', channel, usernames]);
+        _.each(usernames, username => {
+            watchers.addWatcher(channel, username);
+            //TODO: Send event?
+        });
+        // console.log(watchers.getWatchers(channel));
     });
-});
 
-client.on('notice', (channel, msgid, message) => {
-    logger.info(['notice', channel, msgid, message]);
-});
+    client.on('roomstate', (channel, state) => {
+        logger.info(['roomstate', channel, state]);
+        client.mods(channel);
+    });
 
-client.on('mods', (channel, mods) => {
-    logger.info(['mods event', channel, mods]);
-    _.each(mods, username => {
+    client.on('subscription', (channel, username, method, message, userstate) => {
+        // console.log('subscription', channel, username, method, message, userstate);
+        events.trigger('chat', 'sub', {
+            channel,
+            username,
+            method,
+            message,
+            userstate,
+        });
+    });
+
+    client.on('resub', (channel, username, months, message, userstate, methods) => {
+        // console.log('resub', channel, username, months, message, userstate, methods);
+        events.trigger('chat', 'resub', {
+            channel,
+            username,
+            months,
+            message,
+            userstate,
+            methods,
+        });
+    });
+
+    client.on('notice', (channel, msgid, message) => {
+        logger.info(['notice', channel, msgid, message]);
+    });
+
+    client.on('mods', (channel, mods) => {
+        logger.info(['mods event', channel, mods]);
+        _.each(mods, username => {
+            watchers.addMod(channel, username);
+            //TODO: Add event?
+        });
+        // console.log(watchers.getMods(channel));
+    });
+
+    client.on('mod', (channel, username) => {
+        // console.log('mod', channel, username);
         watchers.addMod(channel, username);
-        //TODO: Add event?
+        events.trigger('chat', 'mod', {
+            channel,
+            username,
+        });
+        // console.log(watchers.getMods(channel));
     });
-    // console.log(watchers.getMods(channel));
-});
 
-client.on('mod', (channel, username) => {
-    // console.log('mod', channel, username);
-    watchers.addMod(channel, username);
-    events.trigger('chat', 'mod', {
-        channel,
-        username,
+    client.on('unmod', (channel, username) => {
+        // console.log('unmod', channel, username);
+        watchers.removeMod(channel, username);
+        events.trigger('chat', 'unmod', {
+            channel,
+            username,
+        });
+        // console.log(watchers.getMods(channel));
     });
-    // console.log(watchers.getMods(channel));
-});
 
-client.on('unmod', (channel, username) => {
-    // console.log('unmod', channel, username);
-    watchers.removeMod(channel, username);
-    events.trigger('chat', 'unmod', {
-        channel,
-        username,
+    client.on('message', (channel, userstate, message, self) => {
+        logger.info(['message', channel, userstate, message, self]);
     });
-    // console.log(watchers.getMods(channel));
-});
 
-client.on('message', (channel, userstate, message, self) => {
-    logger.info(['message', channel, userstate, message, self]);
-});
-
-client.on('hosted', (channel, username, viewers, autohost) => {
-    // console.log('hosted', channel, username, viewers, autohost);
-    events.trigger('chat', 'hosted', {
-        channel,
-        username,
-        viewers,
-        autohost,
+    client.on('hosted', (channel, username, viewers, autohost) => {
+        // console.log('hosted', channel, username, viewers, autohost);
+        events.trigger('chat', 'hosted', {
+            channel,
+            username,
+            viewers,
+            autohost,
+        });
     });
-});
 
-client.on("hosting", function (channel, target, viewers) {
-    logger.info(['hosting', channel, target, viewers]);
-});
-
-client.on("unhost", function (channel, viewers) {
-    logger.info(['unhost', channel, viewers]);
-});
-
-client.on('cheer', (channel, userstate, message) => {
-    // console.log('cheer', channel, userstate, message);
-    events.trigger('chat', 'cheer', {
-        channel,
-        userstate,
-        message,
+    client.on("hosting", function (channel, target, viewers) {
+        logger.info(['hosting', channel, target, viewers]);
     });
-});
 
-client.on('chat', (channel, userstate, message, self) => {
-    // Don't listen to my own messages..
-    if (self) return;
-
-    // console.log('chat', channel, userstate, message, self);
-    events.trigger('chat', 'message', {
-        channel,
-        userstate,
-        message,
+    client.on("unhost", function (channel, viewers) {
+        logger.info(['unhost', channel, viewers]);
     });
-});
 
-client.on('ban', (channel, username, reason) => {
-    // console.log('ban', channel, username, reason);
-    events.trigger('chat', 'ban', {
-        channel,
-        username,
-        reason,
+    client.on('cheer', (channel, userstate, message) => {
+        // console.log('cheer', channel, userstate, message);
+        events.trigger('chat', 'cheer', {
+            channel,
+            userstate,
+            message,
+        });
     });
-});
 
-client.on('timeout', (channel, username, reason, duration) => {
-    // console.log('timeout', channel, username, reason, duration);
-    events.trigger('chat', 'timeout', {
-        channel,
-        username,
-        reason,
-        duration,
+    client.on('chat', (channel, userstate, message, self) => {
+        // Don't listen to my own messages..
+        if (self) return;
+
+        // console.log('chat', channel, userstate, message, self);
+        events.trigger('chat', 'message', {
+            channel,
+            userstate,
+            message,
+        });
     });
-});
 
-// Connect the client to the server..
-// client.connect();
+    client.on('ban', (channel, username, reason) => {
+        // console.log('ban', channel, username, reason);
+        events.trigger('chat', 'ban', {
+            channel,
+            username,
+            reason,
+        });
+    });
 
-export default client;
+    client.on('timeout', (channel, username, reason, duration) => {
+        // console.log('timeout', channel, username, reason, duration);
+        events.trigger('chat', 'timeout', {
+            channel,
+            username,
+            reason,
+            duration,
+        });
+    });
+
+    // Connect the client to the server..
+    client.connect();
+
+    return client;
+};

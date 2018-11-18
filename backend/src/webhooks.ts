@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import axios from 'axios';
 import crypto from 'crypto';
-import { Express, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import api from './api';
 import events from './events';
 import logger from './logger';

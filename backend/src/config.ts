@@ -55,11 +55,6 @@ class Config {
         return {
             streamer: {
                 username: this.getStreamerName(),
-                password: this.getStreamerPassword(),
-            },
-            bot: {
-                username: this.getBotName(),
-                password: this.getBotPassword(),
             },
             redis: {
                 host: this.getRedisHost(),
@@ -87,18 +82,6 @@ class Config {
 
     public getStreamerName(): string {
         return this.getValue('streamer.username', 'STREAMER_USERNAME');
-    }
-
-    public getStreamerPassword(): string {
-        return this.getValue('streamer.password', 'STREAMER_PASSWORD');
-    }
-
-    public getBotName(): string {
-        return this.getValue('bot.username', 'BOT_USERNAME');
-    }
-
-    public getBotPassword(): string {
-        return this.getValue('bot.password', 'BOT_PASSWORD');
     }
 
     public getRedisHost(): string {

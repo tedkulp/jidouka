@@ -1,5 +1,6 @@
 import Promise from 'bluebird';
 import Redis from 'redis';
+import { delay } from 'lodash';
 import config from '../config';
 import log from '../logger';
 
@@ -10,9 +11,25 @@ export interface IPromisifedRedisClient extends Redis.RedisClient {
 const client = Redis.createClient({
     port: config.getRedisPort(),
     host: config.getRedisHost(),
-});
+}) as IPromisifedRedisClient;
 Promise.promisifyAll(client);
 
 log.info('We init redis');
 
-export default client as IPromisifedRedisClient;
+client.getAsyncWhenAvailable = keyName => {
+    const p = Promise.defer();
+    const lookup = keyName => {
+        client.getAsync(keyName).then(value => {
+            if (!value) {
+                delay(lookup, 1000, keyName);
+            }
+            p.resolve(value);
+        });
+    }
+
+    lookup(keyName);
+
+    return p.promise;
+};
+
+export default client;
