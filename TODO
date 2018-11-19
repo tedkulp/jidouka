@@ -67,9 +67,9 @@ Todo:
     ☐ Extra Life
     ☐ Event List
   Grafana?:
-    ☐ Current viewers per minute
-    ☐ # chat messages per minute
-    ☐ milestones (those vertical lines) for online/offline/game change/other events
+    ✔ Current viewers per minute @done(18-11-19 07:58)
+    ✔ # chat messages per minute @done(18-11-19 07:58)
+    ☐ Annotations for online/offline/game change/other events
   Nice Things:
     ☐ Node Cron?
     ☐ Look into Spotify API

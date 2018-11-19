@@ -64,6 +64,12 @@ class Config {
                 url: this.getMongoUri(),
                 dbName: this.getMongoDbName(),
             },
+            influxdb: {
+                enable: this.useInflux(),
+                host: this.getInfluxHost(),
+                port: this.getInfluxPort(),
+                dbName: this.getInfluxDbName(),
+            },
             options: {
                 panelUser: this.getPanelUser(),
                 panelPass: this.getPanelPass(),
@@ -78,6 +84,22 @@ class Config {
             },
             stateToken: this.getStateToken(),
         };
+    }
+
+    public useInflux(): boolean {
+        return this.getValue('influx.enable', 'INFLUX_ENABLE') || false;
+    }
+
+    public getInfluxDbName(): string {
+        return this.getValue('influx.dbName', 'INFLUX_DBNAME') || "jidouka";
+    }
+
+    public getInfluxPort(): number {
+        return this.getValue('influx.port', 'INFLUX_PORT') || 8086;
+    }
+
+    public getInfluxHost(): string {
+        return this.getValue('influx.host', 'INFLUX_HOST') || 'localhost';
     }
 
     public getStreamerName(): string {
