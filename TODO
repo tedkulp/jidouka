@@ -19,10 +19,13 @@ Todo:
     ☐ Follow Date
     ☐ Import list of followers on startup?
     ☐ Reconnect to chat if bot account is reauthenticated
+    ☐ Do initial refresh of client tokens on startup if they don't exist
   API:
     ✔ Add centralized callers for helix and kraken. Track remaining calls. @done(18-11-13 08:02)
     ☐ Add handling for when you're out of API calls
     ☐ Add handling for pagination? (Not sure how this would work)
+    ☐ Some commands shouldn't try running if there is no valid client id or token
+      - Gives time for oauth registration after initial start...
   Panel:
     ☐ Show/Set game
     ☐ Show/Set Title
@@ -58,6 +61,7 @@ Todo:
     ☐ tmi.js is dead. Look for alternatives @low
   Overlays:
     * We can continue using Streamlabs until we sort this out
+    ✔ Watcher Count @done(18-11-18 11:01)
     ☐ Follows
     ☐ Subscriptions
     ☐ Extra Life

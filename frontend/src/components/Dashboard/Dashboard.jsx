@@ -1,7 +1,18 @@
 import * as React from 'react';
+import { Query } from "react-apollo";
+import gql from "graphql-tag";
 
 import { createStyles, withStyles } from '@material-ui/core/styles';
 import { Card, CardContent, CardHeader, Grid } from '@material-ui/core';
+
+const GET_CONFIG = gql`
+{
+    config {
+        streamer {
+            username
+        }
+    }
+}`;
 
 const styles = ({ palette, spacing }) => createStyles({
     root: {
@@ -20,24 +31,37 @@ class Dashboard extends React.Component {
         const { classes } = this.props;
 
         return (
-            <Grid container={true} spacing={24}>
-                <Grid item={true} xs={6}>
-                    <Card className={classes.card}>
-                        <CardHeader title="Stream Monitor" />
-                        <CardContent className={classes.cardContent}>
-                            {/* <iframe style={{ width: '100%', height: '100%' }} src={"https://player.twitch.tv/?channel=n3rdstreettv&autoplay=true&muted=true"} frameBorder="0" /> */}
-                        </CardContent>
-                    </Card>
-                </Grid>
-                <Grid item={true} xs={6}>
-                    <Card className={classes.card}>
-                        <CardHeader title="Chat" />
-                        <CardContent className={classes.cardContent}>
-                            {/* <iframe style={{ width: '100%', height: '100%' }} id="n3rdstreettv" src={"https://twitch.tv/embed/n3rdstreettv/chat"} scrolling="no" frameBorder="0" /> */}
-                        </CardContent>
-                    </Card>
-                </Grid>
-            </Grid>
+            <Query query={GET_CONFIG}>
+                {({ loading, error, data }) => {
+                    if (loading) {
+                        return "Loading...";
+                    }
+                    if (error) {
+                        return `Error! ${error.message}`;
+                    }
+
+                    return (
+                        <Grid container={true} spacing={24}>
+                            <Grid item={true} xs={6}>
+                                <Card className={classes.card}>
+                                    <CardHeader title="Stream Monitor" />
+                                    <CardContent className={classes.cardContent}>
+                                        <iframe style={{ width: '100%', height: '100%' }} title="Preview Window" src={`https://player.twitch.tv/?channel=${data.config.streamer.username}&autoplay=true&muted=true`} frameBorder="0" />
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                            <Grid item={true} xs={6}>
+                                <Card className={classes.card}>
+                                    <CardHeader title="Chat" />
+                                    <CardContent className={classes.cardContent}>
+                                        <iframe style={{ width: '100%', height: '100%' }} title="Chat Widget" id={data.config.streamer.username} src={`https://twitch.tv/embed/${data.config.streamer.username}/chat`} scrolling="no" frameBorder="0" />
+                                    </CardContent>
+                                </Card>
+                            </Grid>
+                        </Grid>
+                    );
+                }}
+            </Query>
         );
     }
 }
