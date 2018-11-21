@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import axios from 'axios';
 import crypto from 'crypto';
+
 import { Request, Response } from 'express';
 import api from './api';
 import events from './events';
@@ -54,6 +55,12 @@ const webhookPost = async (req: Request, res: Response) => {
 
         if (followLink) {
             events.trigger('webhook', 'follow', dataBlob);
+
+            const foundUser = await api.getUserDetails(dataBlob['from_name']);
+            if (!foundUser.followDate) {
+                foundUser.followDate = new Date();
+                foundUser.save();
+            }
         }
 
         if (onlineLink) {

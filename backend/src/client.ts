@@ -45,7 +45,7 @@ export async function connect() {
     client = new tmi.client(clientConfig);
 
     client.on('join', (channel, username, self) => {
-        // console.log('join', channel, username);
+        console.log('join', channel, username);
         watchers.addWatcher(channel, username);
         events.trigger('chat', 'join', {
             channel,
@@ -117,7 +117,7 @@ export async function connect() {
     });
 
     client.on('mod', (channel, username) => {
-        // console.log('mod', channel, username);
+        console.log('mod', channel, username);
         watchers.addMod(channel, username);
         events.trigger('chat', 'mod', {
             channel,

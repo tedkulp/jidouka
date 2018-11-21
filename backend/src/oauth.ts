@@ -84,7 +84,9 @@ const oauthRefresh = async () => {
         await refreshUser('bot');
     }
 
-    if (clientExpiry && (CURRENT_TIME + EXPIRE_THRESHOLD) > clientExpiry) {
+    // If there is no expiry, then we never got the client token or redis is reset
+    // Since it requires no user intervention, just get it
+    if (!clientExpiry || (CURRENT_TIME + EXPIRE_THRESHOLD) > clientExpiry) {
         logger.info('REFRESHING CLIENT TOKEN!!!!!');
         await refreshClient();
     }
@@ -105,17 +107,6 @@ app.getAsync('/oauth', async (req, res) => {
         }
     } else {
         res.status(401).send('Invalid request');
-    }
-});
-
-// TODO: Remove me! This should be checked on startup and refreshed
-// if necessary.
-app.getAsync('/oauth/refresh_bot', async (_, res) => {
-    try {
-        await refreshClient();
-        res.send('OK');
-    } catch (e) {
-        res.status(500).send(e);
     }
 });
 

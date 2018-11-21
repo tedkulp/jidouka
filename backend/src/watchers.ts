@@ -44,6 +44,8 @@ export class Watcher {
 }
 
 const addWatcher = async (channel: string, username: string, isMod: boolean = false) => {
+    // console.log('addWatcher', channel, username, isMod);
+
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
     }
@@ -53,10 +55,15 @@ const addWatcher = async (channel: string, username: string, isMod: boolean = fa
         return;
     }
 
-    const userId = await api.getUserId(username);
-    watchers = watchers.set(channel, watchers.get(channel).add(new Watcher(username, userId, isMod)));
+    // Add the user immediately, then do the userid lookup
+    // Because this can get called for the same user a lot of times
+    // fairly quickly
+    const watcher = new Watcher(username, null, isMod);
+    watchers = watchers.set(channel, watchers.get(channel).add(watcher));
 
-    // logger.debug(watchers.get(channel).toJSON());
+    watcher.id = await api.getUserId(username);
+
+    logger.debug(['watchers', watchers.get(channel).map(w => `${w.username}(${w.mod})`).join()]);
 };
 
 const removeWatcher = (channel: string, username: string): void => {
@@ -84,6 +91,7 @@ const getWatchers = (channel: string): Array<Watcher> => {
 };
 
 const addMod = async (channel: string, username: string) => {
+    // console.log('addMod', channel, username);
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
     }
@@ -92,7 +100,7 @@ const addMod = async (channel: string, username: string) => {
     if (user) {
         user.mod = true;
     } else {
-        addWatcher(channel, username, true);
+        await addWatcher(channel, username, true);
     }
 
     // logger.debug(watchers.get(channel).toJSON());

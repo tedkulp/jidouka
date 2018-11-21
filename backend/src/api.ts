@@ -1,11 +1,13 @@
 import { setup } from 'axios-cache-adapter';
 import { get, assign } from 'lodash';
+import moment from 'moment';
 
 import state from './state';
 import config from './config';
 import { UserModel } from './models/user';
 import redis from './servers/redis';
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import logger from './logger';
 
 const axiosCache = setup({
     cache: {
@@ -133,15 +135,33 @@ export const getUserDetails = async (username?: string) => {
         // We have a newbie, folks!
         const apiUser = await getUserDetailsFromApi(username);
         if (apiUser) {
+            // Check to see if they're following us already
+            const followDate = await getFollowTime(apiUser['id']);
+
             // We has api data, create a model in the database
             // and then return it
-            return UserModel.create({
+            const modelData = {
                 twitchId: apiUser['id'],
                 username: apiUser['login'],
                 displayName: apiUser['display_name'],
                 watchedTime: 0,
                 numMessages: 0,
-            });
+                followDate: followDate && moment(followDate).toDate(), // Normalize date
+            };
+
+            let p;
+
+            try {
+                p = await UserModel.create(modelData);
+            } catch (err) {
+                if (err.code && err.code === 11000) {
+                    logger.warn('Tried to insert duplicate user: ' + modelData.username);
+                } else {
+                    logger.error(err);
+                }
+            }
+
+            return p;
         }
     }
 
@@ -179,6 +199,22 @@ export const getUserId = async (username?: string) => {
     return null;
 };
 
+const getFollowTime = async (fromId: number) => {
+    const response = await makeHelixRequest({
+        url: '/users/follows',
+        params: {
+            from_id: fromId.toString(),
+            to_id: await redis.getAsync('streamer:twitch_id'),
+        },
+    });
+
+    return get(response, 'data.0.followed_at', null);
+};
+
+const isFollowingStreamer = async (fromId: number) => {
+    return await getFollowTime(fromId) !== null;
+};
+
 const getStreamerFollowsData = async () => {
     const response = await makeHelixRequest({
         url: '/users/follows',
@@ -212,6 +248,8 @@ export default {
     getUserDetails,
     getUserDetailsFromToken,
     getUserId,
+    getFollowTime,
     getStreamerFollowCount,
+    isFollowingStreamer,
     getGameInfo,
 };

@@ -16,10 +16,12 @@ Todo:
     ✔ Start tracking bot user account token as well at app token @done(18-11-12 07:31)
     ✔ Use oauth tokens to grab current bot and streamer names @done(18-11-12 07:48)
     ✔ Grab user ids after oauth and store in redis @done(18-11-12 07:48)
-    ☐ Follow Date
+    ✔ Do initial refresh of client tokens on startup if they don't exist @done(18-11-21 06:35)
+    ✔ Follow Date @done(18-11-21 07:00)
     ☐ Import list of followers on startup?
+  Chat Connection:
     ☐ Reconnect to chat if bot account is reauthenticated
-    ☐ Do initial refresh of client tokens on startup if they don't exist
+    ☐ Make chat login resilient to bot oauth token not being available
   API:
     ✔ Add centralized callers for helix and kraken. Track remaining calls. @done(18-11-13 08:02)
     ☐ Add handling for when you're out of API calls
