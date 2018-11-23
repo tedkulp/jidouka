@@ -39,11 +39,11 @@ Todo:
       ✔ Loader can load from easily dockerable directory @done(18-11-05 07:30)
     Query Commands:
       ✔ !subs @done(18-11-05 08:38)
-      ☐ !followage
+      ✔ !followage @done(18-11-22 20:46)
       ✔ !followers @done(18-11-07 05:56)
       ✔ !lastseen @done(18-11-05 08:38)
         ☐ Add handling for invalid names
-      ☐ !age (total age of account from api)
+      ✔ !age (total age of account from api) @done(18-11-22 20:46)
       ✔ !watched (watched time) @done(18-11-07 06:22)
       ✔ !messages (number of messages sent for user) @done(18-11-07 06:16)
       ☐ !me (Summary of !followage, !messages)
@@ -68,6 +68,7 @@ Todo:
     ☐ Subscriptions
     ☐ Extra Life
     ☐ Event List
+    ☐ Emote display
   Grafana?:
     ✔ Current viewers per minute @done(18-11-19 07:58)
     ✔ # chat messages per minute @done(18-11-19 07:58)

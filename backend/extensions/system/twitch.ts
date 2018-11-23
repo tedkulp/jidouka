@@ -1,5 +1,6 @@
 import axios from 'axios';
 import moment from 'moment';
+import momentDurationFormatSetup from 'moment-duration-format';
 import { get } from 'lodash';
 
 import commands, { ResponseList } from '../../src/commands';
@@ -8,6 +9,8 @@ import { UserModel } from '../../src/models/user';
 import config from '../../src/config';
 import logger from '../../src/logger';
 import api from '../../src/api';
+
+momentDurationFormatSetup(moment);
 
 const formatSeconds = (totalSeconds) => {
     let result = '';
@@ -27,37 +30,56 @@ const formatSeconds = (totalSeconds) => {
     result = result + `${seconds}s`;
 
     return result;
-}
+};
+
+const getUsersFromArgs = (args, details): Array<string> => {
+    const sentArgs = args.trim();
+
+    if (sentArgs !== '') {
+        return sentArgs.split(' ');
+    } else {
+        // Get sender of message
+        const username = get(details, 'userstate.username', null);
+        if (username) {
+            return [ username ];
+        }
+    }
+
+    return [];
+};
 
 commands.register('!subs', async (args: string, details: any): Promise<string> => {
-    // TODO: Check to see if they're partner/affiliate before bothering using broadcaster_type from redis
+    const broadcasterType = await redis.getAsync('bot:broadcaster_type');
 
-    try {
-        const clientId = config.getClientId();
-        const twitchId = await redis.getAsync('streamer:twitch_id');
-        const ouathToken = await redis.getAsync('streamer:oauth:access_token');
-
-        const response = await axios.get(`https://api.twitch.tv/kraken/channels/${twitchId}/subscriptions`, {
-            headers: {
-                'Client-ID': clientId,
-                'Authorization': `OAuth ${ouathToken}`,
-                'Accept': 'application/vnd.twitchtv.v5+json',
-            },
-        });
-
-        // state.setApiLimit(response.headers['ratelimit-limit'], response.headers['ratelimit-remaining'], response.headers['ratelimit-reset']);
-
-        let count = get(response, 'data._total', 0);
-        count = count ? (count - 1) : 0; // The streamer is in the list if there are any
-        return `There are currently: ${count} subs.`;
-    } catch (e) {
-        logger.error(e); // TODO: Finalize API handling
-        return 'There was an error getting the sub count.';
+    if (broadcasterType === 'affiliate' || broadcasterType === 'partner') {
+        try {
+            const subCount = await api.getSubCount();
+            return `There are currently: ${subCount} subs.`;
+        } catch (e) {
+            logger.error(e); // TODO: Finalize API handling
+            return 'There was an error getting the sub count.';
+        }
+    } else {
+        return 'This channel can\'t have any subs.';
     }
 });
 
-commands.register('!followage', async (args: string, details: any): Promise<string> => {
-    return 'Not implemented yet';
+commands.register('!followage', async (args: string, details: any): Promise<ResponseList> => {
+    const now = moment();
+    const names = getUsersFromArgs(args, details);
+
+    const mapped = names.map(async (n) => {
+        const foundUser = await api.getUserDetails(n);
+        if (foundUser && foundUser['followDate']) {
+            const followDate = moment(foundUser['followDate']);
+            const duration = moment.duration(now.diff(followDate));
+            return `${n} started following ${duration.format()} ago at ${moment(foundUser.updatedAt).format('ddd, MMM D YYYY, h:mm a')}.`;
+        }
+
+        return `${n} is not following the stream.`;
+    });
+
+    return Promise.all(mapped);
 });
 
 commands.register('!followers', async (args: string, details: any): Promise<string> => {
@@ -66,7 +88,8 @@ commands.register('!followers', async (args: string, details: any): Promise<stri
 });
 
 commands.register('!lastseen', async (args: string, details: any): Promise<ResponseList> => {
-    const names = args.split(' ');
+    const names = getUsersFromArgs(args, details);
+
     const mapped = names.map(async (n) => {
         const foundUser = await UserModel.findOne({
             username: n,
@@ -76,23 +99,27 @@ commands.register('!lastseen', async (args: string, details: any): Promise<Respo
     return Promise.all(mapped);
 });
 
-commands.register('!age', async (args: string, details: any): Promise<ResponseList | string> => {
-    return 'Not implemented yet';
+commands.register('!age', async (args: string, details: any): Promise<ResponseList> => {
+    const now = moment();
+    const names = getUsersFromArgs(args, details);
+
+    const mapped = names.map(async (n) => {
+        const userId = await api.getUserId(n);
+        if (userId) {
+            const createDate = await api.getAccountCreateDate(userId);
+            if (createDate) {
+                const createDateMoment = moment(createDate);
+                const duration = moment.duration(now.diff(createDateMoment));
+                return `${n} created their account ${duration.format()} ago at ${createDateMoment.format('ddd, MMM D YYYY, h:mm a')}.`;
+            }
+        }
+        return `Count not get create date for ${n}`;
+    });
+    return Promise.all(mapped);
 });
 
 commands.register('!watched', async (args: string, details: any): Promise<ResponseList> => {
-    const sentArgs = args.trim();
-    let names = [];
-
-    if (sentArgs !== '') {
-        names = sentArgs.split(' ');
-    } else {
-        // Get sender of message
-        const username = get(details, 'userstate.username', null);
-        if (username) {
-            names = [ username ];
-        }
-    }
+    const names = getUsersFromArgs(args, details);
 
     const mapped = names.map(async (n) => {
         const foundUser = await UserModel.findOne({
@@ -104,18 +131,7 @@ commands.register('!watched', async (args: string, details: any): Promise<Respon
 });
 
 commands.register('!messages', async (args: string, details: any): Promise<ResponseList> => {
-    const sentArgs = args.trim();
-    let names = [];
-
-    if (sentArgs !== '') {
-        names = sentArgs.split(' ');
-    } else {
-        // Get sender of message
-        const username = get(details, 'userstate.username', null);
-        if (username) {
-            names = [ username ];
-        }
-    }
+    const names = getUsersFromArgs(args, details);
 
     const mapped = names.map(async (n) => {
         const foundUser = await UserModel.findOne({

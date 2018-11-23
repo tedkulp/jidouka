@@ -17,6 +17,14 @@ const axiosCache = setup({
     },
 }) as AxiosInstance;
 
+const axiosMediumCache = setup({
+    cache: {
+        maxAge: 60 * 1000,
+        exclude: { query: false },
+        key: req => req.url + JSON.stringify(req.params),
+    },
+}) as AxiosInstance;
+
 const axiosLongCache = setup({
     cache: {
         exclude: { query: false },
@@ -34,6 +42,7 @@ export enum RequestAuthType {
 export enum RequestCacheType {
     NONE = 'NONE',
     SHORT = 'SHORT',
+    MEDIUM = 'MEDIUM',
     LONG = 'LONG',
 };
 
@@ -49,17 +58,19 @@ export const makeHelixRequest = async (requestConfig: AxiosRequestConfig, authTy
             break;
         case RequestAuthType.BOT_OAUTH:
             requestConfig.headers['Client-ID'] = config.getClientId();
-            requestConfig.headers['Authorization'] = `Bearer ${await redis.get('bot:oauth:access_token')}`;
+            requestConfig.headers['Authorization'] = `Bearer ${await redis.getAsync('bot:oauth:access_token')}`;
             break;
         case RequestAuthType.STREAMER_OAUTH:
             requestConfig.headers['Client-ID'] = config.getClientId();
-            requestConfig.headers['Authorization'] = `Bearer ${await redis.get('streamer:oauth:access_token')}`;
+            requestConfig.headers['Authorization'] = `Bearer ${await redis.getAsync('streamer:oauth:access_token')}`;
             break;
     };
 
     let fn: Function = axios;
     if (cacheType == RequestCacheType.SHORT) {
         fn = axiosCache;
+    } else if (cacheType == RequestCacheType.MEDIUM) {
+        fn = axiosMediumCache;
     } else if (cacheType == RequestCacheType.LONG) {
         fn = axiosLongCache;
     }
@@ -77,23 +88,27 @@ export const makeKrakenRequest = async (requestConfig: AxiosRequestConfig, authT
         headers: {},
     }, requestConfig);
 
+    requestConfig.headers['Accept'] = 'application/vnd.twitchtv.v5+json';
+
     switch (authType) {
         case RequestAuthType.CLIENT:
             requestConfig.headers['Client-ID'] = config.getClientId();
             break;
         case RequestAuthType.BOT_OAUTH:
             requestConfig.headers['Client-ID'] = config.getClientId();
-            requestConfig.headers['Authorization'] = `OAuth ${await redis.get('bot:oauth:access_token')}`;
+            requestConfig.headers['Authorization'] = `OAuth ${await redis.getAsync('bot:oauth:access_token')}`;
             break;
         case RequestAuthType.STREAMER_OAUTH:
             requestConfig.headers['Client-ID'] = config.getClientId();
-            requestConfig.headers['Authorization'] = `OAuth ${await redis.get('streamer:oauth:access_token')}`;
+            requestConfig.headers['Authorization'] = `OAuth ${await redis.getAsync('streamer:oauth:access_token')}`;
             break;
     };
 
     let fn: Function = axios;
     if (cacheType == RequestCacheType.SHORT) {
         fn = axiosCache;
+    } else if (cacheType == RequestCacheType.MEDIUM) {
+        fn = axiosMediumCache;
     } else if (cacheType == RequestCacheType.LONG) {
         fn = axiosLongCache;
     }
@@ -242,14 +257,42 @@ export const getGameInfo = async (gameId) => {
     return get(response, 'data.data[0]', null);
 }
 
+export const getSubCount = async () => {
+    const userId = await redis.getAsync('streamer:twitch_id');
+    const response = await makeKrakenRequest({
+        url: `/channels/${userId}/subscriptions`,
+    }, RequestAuthType.STREAMER_OAUTH, RequestCacheType.MEDIUM);
+
+    let count = get(response, 'data._total', 0);
+    count = count ? (count - 1) : 0; // The streamer is in the list if there are any
+    return count;
+};
+
+export const getAccountCreateDate = async (userId) => {
+    let response;
+
+    try {
+        response = await makeKrakenRequest({
+            url: `/users/${userId}`,
+        }, RequestAuthType.CLIENT, RequestCacheType.LONG);
+    } catch (err) {
+        console.error('err', err);
+    }
+
+    return get(response, 'data.created_at', null);
+};
+
 export default {
     RequestAuthType,
     getStreamData,
     getUserDetails,
     getUserDetailsFromToken,
+    getUserDetailsFromApi,
     getUserId,
     getFollowTime,
+    getSubCount,
     getStreamerFollowCount,
     isFollowingStreamer,
     getGameInfo,
+    getAccountCreateDate,
 };
