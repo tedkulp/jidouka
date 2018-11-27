@@ -70,7 +70,6 @@ process.on('SIGUSR2', shutdown);
         app.use(staticServer(clientDir));
         app.get('*', (req, res) => {
             res.sendFile(`${clientDir}/index.html`);
-            res.end();
         });
     } else {
         app.use(proxy);
