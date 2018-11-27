@@ -69,7 +69,7 @@ process.on('SIGUSR2', shutdown);
     if (fs.existsSync(clientDir)) {
         app.use(staticServer(clientDir));
         app.get('*', (req, res) => {
-            res.sendFile(clientDir, 'index.html');
+            res.sendFile(`${clientDir}/index.html`);
             res.end();
         });
     } else {
