@@ -1,5 +1,6 @@
 import tmi from 'tmi.js';
 import _ from 'lodash';
+import util from 'util';
 
 import watchers from './watchers';
 import events from './events';
@@ -25,7 +26,13 @@ export function isConnected() {
     return client !== null;
 };
 
-export async function connect() {
+export async function getClient(): tmi.client {
+    if (client) {
+        return client;
+    }
+
+    logger.debug('Initializing client');
+
     const clientConfig = {
         "options": {
             "debug": _.includes(['debug', 'verbose', 'silly'], config.getLogLevel()),
@@ -43,6 +50,23 @@ export async function connect() {
 
     console.log('clientConfig', clientConfig);
     client = new tmi.client(clientConfig);
+
+    const channelClean = (str) => {
+		var channel = typeof str === "undefined" || str === null ? "" : str;
+		return channel.charAt(0) === "#" ? channel.toLowerCase() : "#" + channel.toLowerCase();
+	};
+
+    client.deleteMessage = function deletemessage(channel, messageid) {
+        channel = channelClean(channel);
+
+        // Send the command to the server and race the Promise against a delay..
+        return this._sendCommand(this._getPromiseDelay(), channel, `/delete ${messageid}`, (resolve, reject) => {
+            // Received _promiseDeletemessage event, resolve or reject..
+            this.once("_promiseDeletemessage", (err) => {
+                if (!err) { resolve([channel]); } else { reject(err); }
+            });
+        });
+    };
 
     client.on('join', (channel, username, self) => {
         console.log('join', channel, username);
@@ -171,6 +195,8 @@ export async function connect() {
         // Don't listen to my own messages..
         if (self) return;
 
+        console.log(channel, util.inspect(userstate), message, self);
+
         // console.log('chat', channel, userstate, message, self);
         events.trigger('chat', 'message', {
             channel,
@@ -198,8 +224,14 @@ export async function connect() {
         });
     });
 
-    // Connect the client to the server..
-    client.connect();
-
     return client;
+};
+
+export async function connect(): tmi.client {
+    const client = await getClient();
+    return client.connect().catch(err => {
+        logger.error(['Error connecting', err]);
+        logger.error('Reconnecting in 10 seconds...');
+        _.delay(connect, 10 * 1000);
+    });
 };

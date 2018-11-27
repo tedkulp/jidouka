@@ -5,3 +5,5 @@ config/config.json
 yarn-error.log
 *.code-workspace
 .tmuxp.yaml
+.nyc_output
+coverage

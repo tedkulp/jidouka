@@ -120,7 +120,7 @@ class State {
 
         this.apiLimits[type] = limits;
 
-        console.log(this.apiLimits);
+        // console.log(this.apiLimits);
     }
 
     toJSON() {
