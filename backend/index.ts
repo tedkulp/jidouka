@@ -68,6 +68,10 @@ process.on('SIGUSR2', shutdown);
     const clientDir = `${__dirname}/client`;
     if (fs.existsSync(clientDir)) {
         app.use(staticServer(clientDir));
+        app.get('*', (req, res) => {
+            res.sendFile(clientDir, 'index.html');
+            res.end();
+        });
     } else {
         app.use(proxy);
     }
