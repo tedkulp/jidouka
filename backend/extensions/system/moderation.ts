@@ -1,9 +1,12 @@
+import Bluebird from 'bluebird';
 import { get, flatten } from 'lodash';
 
 import events from '../../src/events';
+import redis from '../../src/servers/redis';
 import { client } from '../../src/client';
 import { IListEntry } from '../../src/models/listEntry';
 import { BlacklistEntryModel } from '../../src/models/blacklistEntry';
+import { getSetting } from '../../src/settings';
 
 /*
     Example message:
@@ -35,6 +38,8 @@ export const MAX_EMOTE_COUNT = 15;
 export const MAX_LENGTH = 300;
 export const MAX_URL_COUNT = 0;
 export const MAX_BLACKLISTED_WORDS_COUNT = 0;
+export const MAX_WARNING_THRESHOLD = 3;
+export const MAX_WARNING_TIMEOUT = 10 * 60;
 
 // From: https://gist.github.com/dperini/729294
 export const URL_REGEX = /(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?/ig;
@@ -68,7 +73,7 @@ const getBlacklistedEntries = async () => {
         .cache(15 * 60);
 };
 
-export const allowMessage = (message, userstate, options?): boolean => {
+export const allowMessage = async (message, userstate, options?) => {
     if (!message || !message.trim) {
         return true;
     }
@@ -76,11 +81,34 @@ export const allowMessage = (message, userstate, options?): boolean => {
     message = message.trim();
 
     return (
-        countEmotes(message, userstate) <= MAX_EMOTE_COUNT &&
-        countLength(message, userstate) <= MAX_LENGTH &&
-        countUrls(message, userstate) <= MAX_URL_COUNT &&
-        countBlacklistedWords(message, userstate, ((options && options.blacklistEntries) || [])) <= MAX_BLACKLISTED_WORDS_COUNT
+        countEmotes(message, userstate) <= await getSetting('moderation.maxEmoteCount', MAX_EMOTE_COUNT) &&
+        countLength(message, userstate) <= await getSetting('moderation.maxMessageLength', MAX_LENGTH) &&
+        countUrls(message, userstate) <= await getSetting('moderation.maxUrlCount', MAX_URL_COUNT) &&
+        countBlacklistedWords(message, userstate, ((options && options.blacklistEntries) || [])) <= await getSetting('moderation.maxBlacklistedWordsCount', MAX_BLACKLISTED_WORDS_COUNT)
     );
+};
+
+const getCurrentWarningThreshold = async (userId) => {
+    // Commence anti-pattern...
+    const $d = Bluebird.defer<number>();
+
+    const redisKeyName = `warning_threshold:${userId}`;
+
+    redis
+        .multi()
+        .incr(redisKeyName)
+        .expire(redisKeyName, MAX_WARNING_TIMEOUT)
+        .exec((err, _) => {
+            if (err) {
+                return $d.reject(err);
+            }
+
+            redis.getAsync(redisKeyName).then(res => {
+                return $d.resolve(parseInt(res));
+            });
+        });
+
+    return $d.promise;
 };
 
 const incomingMessage = async (details, _) => {
@@ -92,17 +120,27 @@ const incomingMessage = async (details, _) => {
     }
 
     const blacklistEntries = await getBlacklistedEntries();
-    const allow = allowMessage(details.message, details.userstate, {
+    const allow = await allowMessage(details.message, details.userstate, {
         blacklistEntries,
     });
 
     if (!allow) {
-        // Unfortunately, most clients still don't support this.  Give it a few
-        // months for the major ones to catch up.  Chatty is in beta, there are
-        // others.
-        // The in meantime, 1 second timeout clears all chat history
-        // client.deleteMessage(details.channel, details.userstate['id']);
-        client.timeout(details.channel, details.userstate['username'], 1, 'Triggered moderation -- clearing chat');
+        const warningThreshold = await getCurrentWarningThreshold(details.userstate['user-id']);
+        const maxNum = await getSetting('moderation.maxWarningThreshold', MAX_WARNING_THRESHOLD);
+
+        console.log('warningThreshold', warningThreshold, 'maxNum', maxNum);
+
+        if (warningThreshold >= maxNum) {
+            // Unfortunately, most clients still don't support this.  Give it a few
+            // months for the major ones to catch up.  Chatty is in beta, there are
+            // others.
+            // The in meantime, 1 second timeout clears all chat history
+            // client.deleteMessage(details.channel, details.userstate['id']);
+            client.timeout(details.channel, details.userstate['username'], 1, 'Triggered moderation -- clearing chat');
+        } else {
+            // Write a strongly worded message...
+            client.say(details.channel, `@${details.userstate['username']}: You triggered a moderation rule. This is warning ${warningThreshold} of ${maxNum}.`);
+        }
     }
 };
 
