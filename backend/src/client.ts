@@ -229,6 +229,10 @@ export async function getClient(): tmi.client {
 
 export async function connect(): tmi.client {
     const client = await getClient();
+
+    // Set the password every time, in case we're doing a reconnect after a failed token
+    client.opts.identity.password = "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token');
+
     return client.connect().catch(err => {
         logger.error(['Error connecting', err]);
         logger.error('Reconnecting in 10 seconds...');
