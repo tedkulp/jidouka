@@ -122,7 +122,7 @@ export const makeKrakenRequest = async (requestConfig: AxiosRequestConfig, authT
 
 const setApiLimits = (authType, response) => {
     const h = response.headers;
-    console.log('authType', authType);
+    logger.debug(['authType', authType]);
     if (h['ratelimit-limit'] && h['ratelimit-remaining'] && h['ratelimit-reset']) {
         state.setApiLimit(authType, h['ratelimit-limit'], h['ratelimit-remaining'], h['ratelimit-reset']);
     }

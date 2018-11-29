@@ -2,6 +2,8 @@ import io from 'socket.io';
 import { Set } from 'immutable';
 import { Server } from 'http';
 
+import logger from './logger';
+
 class IoServer {
     sockets: Set<io.Socket> = Set();
     server: io.Server | null = null;
@@ -12,11 +14,11 @@ class IoServer {
 
             this.server.on('connection', socket => {
                 this.sockets = this.sockets.add(socket);
-                console.log('a user connected');
+                logger.debug('a user connected');
 
                 socket.emit('client', { message: 'Connected' });
                 socket.on('disconnect', () => {
-                    console.log('a user disconnected');
+                    logger.debug('a user disconnected');
                     this.sockets = this.sockets.remove(socket);
                 });
             });
