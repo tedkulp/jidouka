@@ -34,6 +34,7 @@ import { getSetting } from '../../src/settings';
 */
 
 // TODO: Make this configurable
+export const MODERATION_TRIGGER_LENGTH = 15;
 export const MAX_EMOTE_COUNT = 15;
 export const MAX_LENGTH = 300;
 export const MAX_URL_COUNT = 0;
@@ -48,13 +49,25 @@ export const countEmotes = (_, userstate) => {
     return (userstate['emotes-raw'] && userstate['emotes-raw'].match(/\-/g) || []).length;
 };
 
+const checkEmotes = async (msg, userstate) => {
+    return countEmotes(msg, userstate) <= await getSetting('moderation.maxEmoteCount', MAX_EMOTE_COUNT);
+};
+
 export const countLength = (msg, _) => {
     return msg.trim().length;
 };
 
+const checkLength = async (msg, userstate) => {
+    return countLength(msg, userstate) <= await getSetting('moderation.maxMessageLength', MAX_LENGTH);
+};
+
 export const countUrls = (msg, _) => {
     return get(msg.match(URL_REGEX), 'length', 0);
-}
+};
+
+const checkUrls = async (msg, userstate) => {
+    return countUrls(msg, userstate) <= await getSetting('moderation.maxUrlCount', MAX_URL_COUNT);
+};
 
 export const countBlacklistedWords = (msg, _, blacklistedWords: Array<IListEntry> = []) => {
     const matches = blacklistedWords.map(e => {
@@ -62,7 +75,12 @@ export const countBlacklistedWords = (msg, _, blacklistedWords: Array<IListEntry
     }).filter(e => !!e);
 
     return flatten(matches).length;
-}
+};
+
+const checkBlacklistedWords = async (msg, userstate, options?) => {
+    const blacklistedWords = ((options && options.blacklistEntries) || []);
+    return countBlacklistedWords(msg, userstate, blacklistedWords) <= await getSetting('moderation.maxBlacklistedWordsCount', MAX_BLACKLISTED_WORDS_COUNT);
+};
 
 const getBlacklistedEntries = async () => {
     const finder = BlacklistEntryModel.find({
@@ -73,19 +91,49 @@ const getBlacklistedEntries = async () => {
         .cache(15 * 60);
 };
 
-export const allowMessage = async (message, userstate, options?) => {
+const rules = {
+    emotes: {
+        description: 'Too many emotes',
+        useTriggerLength: false,
+        detectFn: checkEmotes,
+    },
+    blacklist: {
+        description: 'Blacklisted word(s)',
+        useTriggerLength: false,
+        detectFn: checkBlacklistedWords,
+    },
+    urls: {
+        description: 'URL(s)',
+        useTriggerLength: false,
+        detectFn: checkUrls,
+    },
+    length: {
+        description: 'Message too long',
+        useTriggerLength: false,
+        detectFn: checkLength,
+    },
+}
+
+export const findModerationIssues = async (message, userstate, options?) => {
     if (!message || !message.trim) {
-        return true;
+        return [];
     }
+
+    const triggerLength = await getSetting('moderation.triggerLength', MODERATION_TRIGGER_LENGTH);
 
     message = message.trim();
 
-    return (
-        countEmotes(message, userstate) <= await getSetting('moderation.maxEmoteCount', MAX_EMOTE_COUNT) &&
-        countLength(message, userstate) <= await getSetting('moderation.maxMessageLength', MAX_LENGTH) &&
-        countUrls(message, userstate) <= await getSetting('moderation.maxUrlCount', MAX_URL_COUNT) &&
-        countBlacklistedWords(message, userstate, ((options && options.blacklistEntries) || [])) <= await getSetting('moderation.maxBlacklistedWordsCount', MAX_BLACKLISTED_WORDS_COUNT)
-    );
+    const brokenRules = await Promise.all(Object.keys(rules).map(async (ruleKeyName) => {
+        const rule = rules[ruleKeyName];
+        if (!rule.useTriggerLength || message && message.length > triggerLength) {
+            const result = await rule.detectFn.call(rule, message, userstate, options);
+            if (!result)  {
+                return rule.description;
+            }
+        }
+    }));
+
+    return brokenRules.filter(e => !!e);
 };
 
 const getCurrentWarningThreshold = async (userId) => {
@@ -120,15 +168,15 @@ const incomingMessage = async (details, _) => {
     }
 
     const blacklistEntries = await getBlacklistedEntries();
-    const allow = await allowMessage(details.message, details.userstate, {
+    const issues = await findModerationIssues(details.message, details.userstate, {
         blacklistEntries,
     });
 
-    if (!allow) {
+    if (issues.length) {
         const warningThreshold = await getCurrentWarningThreshold(details.userstate['user-id']);
         const maxNum = await getSetting('moderation.maxWarningThreshold', MAX_WARNING_THRESHOLD);
 
-        console.log('warningThreshold', warningThreshold, 'maxNum', maxNum);
+        // console.log('warningThreshold', warningThreshold, 'maxNum', maxNum);
 
         if (warningThreshold >= maxNum) {
             // Unfortunately, most clients still don't support this.  Give it a few
@@ -139,7 +187,7 @@ const incomingMessage = async (details, _) => {
             client.timeout(details.channel, details.userstate['username'], 1, 'Triggered moderation -- clearing chat');
         } else {
             // Write a strongly worded message...
-            client.say(details.channel, `@${details.userstate['username']}: You triggered a moderation rule. This is warning ${warningThreshold} of ${maxNum}.`);
+            client.say(details.channel, `@${details.userstate['username']}: You triggered moderation rule: "${issues.join(', ')}". This is warning ${warningThreshold} of ${maxNum}.`);
         }
     }
 };

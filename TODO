@@ -48,13 +48,15 @@ Todo:
       ✔ !messages (number of messages sent for user) @done(18-11-07 06:16)
       ☐ !me (Summary of !followage, !messages)
     Moderation:
-      ☐ General
+      ✔ General @done(18-11-28 08:52)
         * # warnings
         * Clear chat (1s timeout)?
-      ☐ Links
+      ✔ Links @done(18-11-28 08:52)
       ☐ Symbols
       ☐ Caps
-      ☐ Long Messages
+      ✔ Long Messages @done(18-11-28 08:52)
+      ✔ Show type of moderation infraction @done(18-11-29 06:00)
+      ☐ Make it all configrable in the UI
     Other commands:
       ☐ Stream markers
       ☐ Deaths
