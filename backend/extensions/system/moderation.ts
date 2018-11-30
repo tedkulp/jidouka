@@ -38,6 +38,7 @@ export const MODERATION_TRIGGER_LENGTH = 15;
 export const MAX_EMOTE_COUNT = 15;
 export const MAX_LENGTH = 300;
 export const MAX_URL_COUNT = 0;
+export const MAX_CAPS_COUNT = 15;
 export const MAX_BLACKLISTED_WORDS_COUNT = 0;
 export const MAX_WARNING_THRESHOLD = 3;
 export const MAX_WARNING_TIMEOUT = 10 * 60;
@@ -67,6 +68,15 @@ export const countUrls = (msg, _) => {
 
 const checkUrls = async (msg, userstate) => {
     return countUrls(msg, userstate) <= await getSetting('moderation.maxUrlCount', MAX_URL_COUNT);
+};
+
+export const countCaps = (msg, _) => {
+    // Do this instead of regex so that we're taking Unicode stuff into account
+    return [...msg].filter(c => c === c.toUpperCase()).length;
+};
+
+const checkCaps = async (msg, userstate) => {
+    return countCaps(msg, userstate) <= await getSetting('moderation.maxCapsCount', MAX_CAPS_COUNT);
 };
 
 export const countBlacklistedWords = (msg, _, blacklistedWords: Array<IListEntry> = []) => {
@@ -111,6 +121,11 @@ const rules = {
         description: 'Message too long',
         useTriggerLength: false,
         detectFn: checkLength,
+    },
+    caps: {
+        description: 'Too many caps',
+        useTriggerLength: true,
+        detectFn: checkCaps,
     },
 }
 
