@@ -21,7 +21,7 @@ Todo:
     ☐ Import list of followers on startup?
   Chat Connection:
     ☐ Reconnect to chat if bot account is reauthenticated
-    ☐ Make chat login resilient to bot oauth token not being available
+    ✔ Make chat login resilient to bot oauth token not being available @done(18-11-30 20:24)
   API:
     ✔ Add centralized callers for helix and kraken. Track remaining calls. @done(18-11-13 08:02)
     ☐ Add handling for when you're out of API calls
@@ -53,7 +53,7 @@ Todo:
         * Clear chat (1s timeout)?
       ✔ Links @done(18-11-28 08:52)
       ☐ Symbols
-      ☐ Caps
+      ✔ Caps @done(18-11-30 20:22)
       ✔ Long Messages @done(18-11-28 08:52)
       ✔ Show type of moderation infraction @done(18-11-29 06:00)
       ☐ Make it all configrable in the UI

@@ -75,6 +75,54 @@ if (config.useInflux()) {
         });
     });
 
+    events.addListener('chat', 'sub', (details, _) => {
+        influx.writePoints([
+            {
+                measurement: 'events',
+                tags: { channel: config.getStreamerName(), type: 'sub', username: details['username'] },
+                fields: { title: 'Subscription', text: details['username'] + ' subscribed to the stream!' },
+            }
+        ]).catch(err => {
+            console.error(`Error saving data to InfluxDB! ${err.stack}`)
+        });
+    });
+
+    events.addListener('chat', 'resub', (details, _) => {
+        influx.writePoints([
+            {
+                measurement: 'events',
+                tags: { channel: config.getStreamerName(), type: 'resub', username: details['username'] },
+                fields: { title: 'Resub', text: details['username'] + ' resubscribed for ' + details['months'] + ' months.' },
+            }
+        ]).catch(err => {
+            console.error(`Error saving data to InfluxDB! ${err.stack}`)
+        });
+    });
+
+    events.addListener('chat', 'cheer', (details, _) => {
+        influx.writePoints([
+            {
+                measurement: 'events',
+                tags: { channel: config.getStreamerName(), type: 'cheer', username: details['username'] },
+                fields: { title: 'Cheer', text: details['username'] + ' cheered ' + details['userstate']['bits'] + ' bits.' },
+            }
+        ]).catch(err => {
+            console.error(`Error saving data to InfluxDB! ${err.stack}`)
+        });
+    });
+
+    events.addListener('chat', 'hosted', (details, _) => {
+        influx.writePoints([
+            {
+                measurement: 'events',
+                tags: { channel: config.getStreamerName(), type: 'hosted', username: details['username'] },
+                fields: { title: 'Hosted', text: details['username'] + ' hosted the stream for ' + details['viewers'] + ' viewers.', autohost: details['autohost'] },
+            }
+        ]).catch(err => {
+            console.error(`Error saving data to InfluxDB! ${err.stack}`)
+        });
+    });
+
     events.addListener('chat', 'message', (details, description) => {
         if (state.isOnline()) {
             numMessages++;

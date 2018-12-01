@@ -105,7 +105,7 @@ export async function getClient(): tmi.client {
     });
 
     client.on('subscription', (channel, username, method, message, userstate) => {
-        // console.log('subscription', channel, username, method, message, userstate);
+        console.log('subscription', channel, username, method, message, userstate);
         events.trigger('chat', 'sub', {
             channel,
             username,
@@ -116,7 +116,7 @@ export async function getClient(): tmi.client {
     });
 
     client.on('resub', (channel, username, months, message, userstate, methods) => {
-        // console.log('resub', channel, username, months, message, userstate, methods);
+        console.log('resub', channel, username, months, message, userstate, methods);
         events.trigger('chat', 'resub', {
             channel,
             username,
