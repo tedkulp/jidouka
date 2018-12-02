@@ -1,4 +1,4 @@
-import tmi from 'tmi.js';
+import tmi from 'twitch-js';
 import _ from 'lodash';
 import util from 'util';
 
@@ -20,13 +20,13 @@ events.register('chat', 'message', 'Message in channel');
 events.register('chat', 'ban', 'Someone banned in channel');
 events.register('chat', 'timeout', 'Someone timed out in channel');
 
-export let client = null;
+export let client: tmi.client = null;
 
 export function isConnected() {
     return client !== null;
 };
 
-export async function getClient(): tmi.client {
+export async function getClient() {
     if (client) {
         return client;
     }
@@ -48,7 +48,7 @@ export async function getClient(): tmi.client {
         "channels": [`#${await redis.getAsyncWhenAvailable('streamer:username')}`],
     };
 
-    console.log('clientConfig', clientConfig);
+    // console.log('clientConfig', clientConfig);
     client = new tmi.client(clientConfig);
 
     const channelClean = (str) => {
@@ -56,7 +56,7 @@ export async function getClient(): tmi.client {
 		return channel.charAt(0) === "#" ? channel.toLowerCase() : "#" + channel.toLowerCase();
 	};
 
-    client.deleteMessage = function deletemessage(channel, messageid) {
+    client['deleteMessage'] = function deletemessage(channel, messageid) {
         channel = channelClean(channel);
 
         // Send the command to the server and race the Promise against a delay..
@@ -91,7 +91,7 @@ export async function getClient(): tmi.client {
     });
 
     client.on('names', (channel, usernames) => {
-        logger.info(['names', channel, usernames]);
+        logger.info('names', channel, usernames);
         _.each(usernames, username => {
             watchers.addWatcher(channel, username);
             //TODO: Send event?
@@ -100,7 +100,7 @@ export async function getClient(): tmi.client {
     });
 
     client.on('roomstate', (channel, state) => {
-        logger.info(['roomstate', channel, state]);
+        logger.info('roomstate', channel, state);
         client.mods(channel);
     });
 
@@ -128,11 +128,11 @@ export async function getClient(): tmi.client {
     });
 
     client.on('notice', (channel, msgid, message) => {
-        logger.info(['notice', channel, msgid, message]);
+        logger.info('notice', channel, msgid, message);
     });
 
     client.on('mods', (channel, mods) => {
-        logger.info(['mods event', channel, mods]);
+        logger.info('mods event', channel, mods);
         _.each(mods, username => {
             watchers.addMod(channel, username);
             //TODO: Add event?
@@ -161,7 +161,7 @@ export async function getClient(): tmi.client {
     });
 
     client.on('message', (channel, userstate, message, self) => {
-        logger.info(['message', channel, userstate, message, self]);
+        logger.info('message', channel, userstate, message, self);
     });
 
     client.on('hosted', (channel, username, viewers, autohost) => {
@@ -175,11 +175,11 @@ export async function getClient(): tmi.client {
     });
 
     client.on("hosting", function (channel, target, viewers) {
-        logger.info(['hosting', channel, target, viewers]);
+        logger.info('hosting', channel, target, viewers);
     });
 
     client.on("unhost", function (channel, viewers) {
-        logger.info(['unhost', channel, viewers]);
+        logger.info('unhost', channel, viewers);
     });
 
     client.on('cheer', (channel, userstate, message) => {
@@ -227,14 +227,14 @@ export async function getClient(): tmi.client {
     return client;
 };
 
-export async function connect(): tmi.client {
+export async function connect() {
     const client = await getClient();
 
     // Set the password every time, in case we're doing a reconnect after a failed token
     client.opts.identity.password = "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token');
 
     return client.connect().catch(err => {
-        logger.error(['Error connecting', err]);
+        logger.error('Error connecting', err);
         logger.error('Reconnecting in 10 seconds...');
         _.delay(connect, 10 * 1000);
     });

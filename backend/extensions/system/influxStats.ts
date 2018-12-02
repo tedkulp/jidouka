@@ -19,9 +19,10 @@ if (config.useInflux()) {
                     tags: { channel: config.getStreamerName() },
                     fields: { numMessages: numMessages },
                 }
-            ]).catch(err => {
+            ]).then(() => {
+                numMessages = 0;
+            }).catch(err => {
                 console.error(`Error saving data to InfluxDB! ${err.stack}`)
-            }).finally(() => {
                 numMessages = 0;
             });
         }

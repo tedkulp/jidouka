@@ -1,4 +1,5 @@
 import { createLogger, format, transports } from 'winston';
+const { SPLAT } = require('triple-beam');
 
 import util from 'util';
 import _ from 'lodash';
@@ -16,9 +17,17 @@ import config from './config';
 const logger = createLogger({
     level: config.getLogLevel(),
     format: format.combine(
+        format.splat(),
         format.timestamp({format: 'HH:mm:ss'}),
         format.colorize(),
-        format.printf(info => `[${info.timestamp}] ${info.level}: ${util.inspect(info.message)}`),
+        format.printf(info => {
+            if (info[SPLAT]) {
+                const msg = [info.message, ...info[SPLAT]].map(i => util.inspect(i)).join(' ');
+                return `[${info.timestamp}] ${info.level}: ${msg}`;
+            } else {
+                return `[${info.timestamp}] ${info.level}: ${util.inspect(info.message)}`;
+            }
+        }),
     ),
     transports: [new transports.Console()],
 });

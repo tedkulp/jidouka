@@ -42,7 +42,7 @@ class State {
 
             events.trigger('status', 'stream', this.toJSON());
 
-            log.debug(['current state', this]);
+            log.silly('current state', this);
         } catch (e) {
             // TODO: What are we doing with errors?
             console.error(e);

@@ -63,7 +63,7 @@ const addWatcher = async (channel: string, username: string, isMod: boolean = fa
 
     watcher.id = await api.getUserId(username);
 
-    logger.debug(['watchers', watchers.get(channel).map(w => `${w.username}(${w.mod})`).join()]);
+    logger.debug('watchers', watchers.get(channel).map(w => `${w.username}(${w.mod})`));
 };
 
 const removeWatcher = (channel: string, username: string): void => {
@@ -128,7 +128,7 @@ const getMods = (channel: string): Array<Watcher> => {
 };
 
 const updateWatchedTime = async (noOnlineCheck: boolean = false, resetTimeout: boolean = true) => {
-    logger.debug('updateWatchedTime');
+    logger.silly('updateWatchedTime');
 
     if (state.isOnline() || noOnlineCheck) {
         watchers.forEach(channel => {
@@ -153,7 +153,7 @@ const updateWatchedTime = async (noOnlineCheck: boolean = false, resetTimeout: b
 };
 
 const updateMessageCount = (userstate) => {
-    logger.debug('updateMessageCount');
+    logger.silly('updateMessageCount');
 
     UserModel.updateOne({
         username: userstate.username,
@@ -174,7 +174,7 @@ const resetReconciliationTime = channel => {
 };
 
 events.addListener('webhook', 'offline', data => {
-    logger.info(['webhook.offline', data]);
+    logger.debug('webhook.offline', data);
 
     // TODO: Do we need multiple channels?
 
@@ -185,7 +185,7 @@ events.addListener('webhook', 'offline', data => {
 });
 
 events.addListener('webhook', 'online', data => {
-    logger.info(['webhook.online', data]);
+    logger.debug('webhook.online', data);
 
     resetReconciliationTime(config.getStreamerName());
 });
