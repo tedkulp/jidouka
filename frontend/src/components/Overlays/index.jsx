@@ -1,14 +1,17 @@
 import * as React from 'react';
-import { Route, withRouter } from 'react-router';
+import { withRouter } from 'react-router';
 
 import ViewerCount from './ViewerCount';
 
+import './index.scss';
+
 class OverlayIndex extends React.Component {
     render() {
+        const { classes } = this.props;
+
         return (
-            <div>
+            <div className="overlay-wrapper">
                 <ViewerCount />
-                {/* <Route path='/overlays/viewer_count' component={ViewerCount} /> */}
             </div>
         );
     }

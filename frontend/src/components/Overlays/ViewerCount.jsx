@@ -13,7 +13,7 @@ class ViewerCount extends React.Component {
         const { status } = this.props;
         const showDiv = get(status, 'numViewers', 0) > 0;
 
-        const classes = classNames('wrapper', {
+        const classes = classNames('viewercount-wrapper', {
             'fade-in': showDiv,
             'fade-out': !showDiv,
         });
