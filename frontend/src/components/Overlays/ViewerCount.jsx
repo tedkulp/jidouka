@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import classNames from 'classnames';
+import { Transition, config } from 'react-spring';
 import { get } from 'lodash';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
@@ -13,17 +13,23 @@ class ViewerCount extends React.Component {
         const { status } = this.props;
         const showDiv = get(status, 'numViewers', 0) > 0;
 
-        const classes = classNames('viewercount-wrapper', {
-            'fade-in': showDiv,
-            'fade-out': !showDiv,
-        });
-
         return (
             <React.Fragment>
-                <div className={classes}>
-                    <FontAwesomeIcon className="icon" icon={faTwitch} />
-                    <span className="count">{status.numViewers}</span>
-                </div>
+                <Transition
+                    config={config.slow}
+                    from={{ opacity: 0, transform: "translateX(100px)", }}
+                    enter={{ opacity: 1, transform: "translateX(0)", }}
+                    leave={{ opacity: 0, transform: "translateX(100px)", }}
+                    items={showDiv}>
+                    {show =>
+                        show && (props => (
+                            <div className="viewercount-wrapper" style={props}>
+                                <FontAwesomeIcon className="icon" icon={faTwitch} />
+                                <span className="count">{status.numViewers}</span>
+                            </div>
+                        ))
+                    }
+                </Transition>
             </React.Fragment>
         );
     }
