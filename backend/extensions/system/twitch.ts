@@ -1,4 +1,3 @@
-import axios from 'axios';
 import moment from 'moment';
 import momentDurationFormatSetup from 'moment-duration-format';
 import { get } from 'lodash';
@@ -6,7 +5,6 @@ import { get } from 'lodash';
 import commands, { ResponseList } from '../../src/commands';
 import redis from '../../src/servers/redis';
 import { UserModel } from '../../src/models/user';
-import config from '../../src/config';
 import logger from '../../src/logger';
 import api from '../../src/api';
 

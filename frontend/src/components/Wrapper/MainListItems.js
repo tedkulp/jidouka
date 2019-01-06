@@ -70,6 +70,12 @@ class MainListItems extends React.Component {
                             </ListItemIcon>
                             <ListItemText primary="Authentication" />
                         </ListItem>
+                        <ListItem button={true} component={Link} to="/settings/custcmds" className={classes.nested}>
+                            <ListItemIcon>
+                                <AccountBoxIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Custom Commands" />
+                        </ListItem>
                     </List>
                 </Collapse>
             </List>

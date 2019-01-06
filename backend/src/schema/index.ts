@@ -1,12 +1,13 @@
-import { gql, ApolloServer } from 'apollo-server-express';
+import { ApolloServer, mergeSchemas, makeExecutableSchema } from 'apollo-server-express';
 import Query from './query';
 import ISODate from './ISODate';
+import extMgr from '../extensions';
 
-const typeDefs = gql`
+const typeDefs = `
     type User {
         id: ID!
-        twitchId: Int
         username: String
+        twitchId: Int
         displayName: String
         watchedTime: Int
         numMessages: Int
@@ -47,7 +48,30 @@ const typeDefs = gql`
     scalar ISODate
 `;
 
-const resolvers = { ISODate, Query };
+let server = null;
 
-// export default makeExecutableSchema({ typeDefs, resolvers });
-export default new ApolloServer({ typeDefs, resolvers, debug: true });
+export function getServer() {
+    if (!server) {
+        const extensionConfigs = extMgr.getGraphQLConfig();
+        const extensionSchemas = extensionConfigs.map(e => e.schema).filter(e => !!e);
+        const extensionResolvers = extensionConfigs.map(e => e.resolvers).filter(e => !!e);
+        const resolvers = { ISODate, Query };
+
+        const mainSchema = makeExecutableSchema({
+            typeDefs,
+            resolvers,
+        });
+
+        const merged = mergeSchemas({
+            schemas: [ mainSchema, ...extensionSchemas ],
+            resolvers: [ resolvers, ...extensionResolvers ],
+        });
+
+        server = new ApolloServer({
+            schema: merged,
+            debug: true,
+        });
+    }
+
+    return server;
+};

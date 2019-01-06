@@ -6,26 +6,31 @@ import { client, isConnected } from './client';
 import log from './logger'
 
 export type ResponseList = Array<string>;
-export type CommandReponse = (args: string, details: any) => Promise<string | ResponseList> | string | ResponseList;
+export type CommandResponse = (args: string, details: any) => Promise<string | ResponseList> | string | ResponseList;
 
 class CommandManager {
-    commands: OrderedMap<string, CommandReponse> = OrderedMap();
+    commands: OrderedMap<string, CommandResponse> = OrderedMap();
 
     init() {
         events.addListener('chat', 'message', this.chatHandler.bind(this));
     }
 
-    register(commandName: string, fn: CommandReponse) {
+    register(commandName: string, fn: CommandResponse) {
         this.commands = this.commands.set(commandName, fn);
-        log.info(['registered command', commandName]);
+        log.info('Registered command:', commandName);
+    }
+
+    unregister(commandName: string) {
+        this.commands = this.commands.remove(commandName);
+        log.info('Unregistered command:', commandName);
     }
 
     async chatHandler(details: any) {
         // details: { channel, userstate, message }
         if (details && details.message) {
             const foundCmd = this.commands
-                .sortBy((val: CommandReponse, key: string) => key.length * -1) // reverse sort
-                .findKey((val: CommandReponse, key: string) => details.message.startsWith(key));
+                .sortBy((val: CommandResponse, key: string) => key.length * -1) // reverse sort
+                .findKey((val: CommandResponse, key: string) => details.message.startsWith(key));
             if (foundCmd) {
                 const foundCmdFn = this.commands.get(foundCmd);
                 const result = await foundCmdFn(details.message.replace(`${foundCmd}`, '').trim(), details);
@@ -43,7 +48,6 @@ class CommandManager {
             }
         }
     }
-
 }
 
 const mgr = new CommandManager();

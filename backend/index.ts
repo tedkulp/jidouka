@@ -5,7 +5,7 @@ import { app, http, shutdownManager, proxy, staticServer } from './src/servers/e
 import fs from 'fs';
 
 import { connect as client } from './src/client';
-import apolloServer from './src/schema';
+import { getServer } from './src/schema';
 import commands from './src/commands';
 import io from './src/io';
 import logger from './src/logger';
@@ -53,16 +53,16 @@ process.on('SIGUSR2', shutdown);
 
 (async () => {
     // Just to force mongoose to init
-    mongoInit();
+    mongoInit(); // Mongo before extensions, so we can define model/schemas directly
 
     // Init ALL the things!
-    apolloServer.applyMiddleware({ app });
     io.init(http);
     webhooks.init(app);
     oauthInit();
-    extensions.init();
     commands.init();
     state.init();
+    await extensions.init(); // Extensions before apollo, so that we can define schemas
+    getServer().applyMiddleware({ app });
 
     // Last, so that everything that's not caught goes to the frontend
     const clientDir = `${__dirname}/client`;

@@ -62,7 +62,7 @@ Todo:
       ☐ Deaths
   Communication:
     ☐ Look into the websocket API for moderation (because of Unban)
-    ☐ tmi.js is dead. Look for alternatives @low
+    ✔ tmi.js is dead. Look for alternatives @low @done(18-12-10 06:43)
   Overlays:
     * We can continue using Streamlabs until we sort this out
     ✔ Watcher Count @done(18-11-18 11:01)
@@ -74,8 +74,10 @@ Todo:
   Grafana?:
     ✔ Current viewers per minute @done(18-11-19 07:58)
     ✔ # chat messages per minute @done(18-11-19 07:58)
-    ☐ Annotations for online/offline/game change/other events
+    ✔ Annotations for online/offline/game change/other events @done(19-01-06 16:29)
   Nice Things:
+    ✔ Allow extensions to define their own models / GQL resolvers @done(19-01-06 16:29)
     ☐ Node Cron?
     ☐ Look into Spotify API
     ☐ Can we control the LED lights?
+      * Webhook is setup in Home Assistant. Just need to call it.

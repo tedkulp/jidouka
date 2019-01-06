@@ -4,6 +4,8 @@ import { Route, withRouter } from 'react-router';
 
 import Dashboard from './Dashboard';
 
+import './index.scss';
+
 class DashboardIndex extends React.Component {
 
     getDisplayValue() {
