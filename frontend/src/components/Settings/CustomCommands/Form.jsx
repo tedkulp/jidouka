@@ -70,7 +70,7 @@ class CustomCommandsForm extends React.Component {
     handleClose = () => {
         this.setState({ open: false });
     };
-MutationsMutations
+
     render() {
         return (
             <Mutations>

@@ -76,6 +76,12 @@ class MainListItems extends React.Component {
                             </ListItemIcon>
                             <ListItemText primary="Custom Commands" />
                         </ListItem>
+                        <ListItem button={true} component={Link} to="/settings/devtools" className={classes.nested}>
+                            <ListItemIcon>
+                                <AccountBoxIcon />
+                            </ListItemIcon>
+                            <ListItemText primary="Dev Tools" />
+                        </ListItem>
                     </List>
                 </Collapse>
             </List>

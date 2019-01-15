@@ -1,3 +1,8 @@
+import moment from 'moment';
+import momentDurationFormatSetup from 'moment-duration-format';
+
+momentDurationFormatSetup(moment);
+
 const initialState = {
     numViewers: 0,
     gameTitle: '',
@@ -5,6 +10,8 @@ const initialState = {
     online: false,
     onlineStartTime: null,
     language: '',
+    title: '',
+    uptime: '0:00',
 };
 
 export const reducer = (state = initialState, action) => {
@@ -17,6 +24,8 @@ export const reducer = (state = initialState, action) => {
                 numViewers: action.numViewers,
                 online: action.online,
                 onlineStartTime: action.onlineStartTime,
+                title: action.title,
+                uptime: moment.duration(moment().diff(moment(action.onlineStartTime))).format(),
             });
         default:
             return state;

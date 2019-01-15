@@ -1,8 +1,10 @@
 import io from 'socket.io';
+import _ from 'lodash';
 import { Set } from 'immutable';
 import { Server } from 'http';
 
 import logger from './logger';
+import events from './events';
 
 class IoServer {
     sockets: Set<io.Socket> = Set();
@@ -20,6 +22,13 @@ class IoServer {
                 socket.on('disconnect', () => {
                     logger.debug('a user disconnected');
                     this.sockets = this.sockets.remove(socket);
+                });
+
+                socket.on('event', data => {
+                    const [ part1, part2 ] = _.get(data, 'event', '').split('.');
+                    if (part1 && part2) {
+                        events.trigger(part1, part2, _.get(data, 'data', {}));
+                    }
                 });
             });
         }
