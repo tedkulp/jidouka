@@ -26,6 +26,19 @@ export function isConnected() {
     return client !== null;
 };
 
+const connectRetry = async (client) => {
+    // Set the password every time, in case we're doing a reconnect after a failed token
+    client.opts.identity.password = "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token');
+
+    return client.connect().catch(err => {
+        logger.error('Error connecting', err);
+        logger.error('Reconnecting in 10 seconds...');
+        _.delay(() => {
+            return connectRetry(client);
+        }, 10 * 1000);
+    });
+};
+
 export async function getClient() {
     if (client) {
         return client;
@@ -39,7 +52,7 @@ export async function getClient() {
             "clientId": config.getClientId(),
         },
         "connection": {
-            "reconnect": true,
+            "reconnect": false,
         },
         "identity": {
             "username": await redis.getAsyncWhenAvailable('bot:username'),
@@ -67,6 +80,10 @@ export async function getClient() {
             });
         });
     };
+
+    client.on('disconnected', () => {
+        return connectRetry(client);
+    });
 
     client.on('join', (channel, username, self) => {
         console.log('join', channel, username);
@@ -229,13 +246,5 @@ export async function getClient() {
 
 export async function connect() {
     const client = await getClient();
-
-    // Set the password every time, in case we're doing a reconnect after a failed token
-    client.opts.identity.password = "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token');
-
-    return client.connect().catch(err => {
-        logger.error('Error connecting', err);
-        logger.error('Reconnecting in 10 seconds...');
-        _.delay(connect, 10 * 1000);
-    });
+    return connectRetry(client);
 };
