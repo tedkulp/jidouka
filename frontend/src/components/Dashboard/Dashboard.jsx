@@ -1,32 +1,33 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { Query } from "react-apollo";
-import gql from "graphql-tag";
+import { Query } from 'react-apollo';
+import gql from 'graphql-tag';
 
 import { createStyles, withStyles } from '@material-ui/core/styles';
 import { Card, CardContent, CardHeader, Grid } from '@material-ui/core';
-import { stat } from 'fs';
 
 const GET_CONFIG = gql`
-{
-    config {
-        streamer {
-            username
+    {
+        config {
+            streamer {
+                username
+            }
         }
     }
-}`;
+`;
 
-const styles = ({ palette, spacing }) => createStyles({
-    root: {
-        display: 'flex',
-    },
-    card: {
-        // maxWidth: 450,
-    },
-    cardContent: {
-        height: 400,
-    },
-});
+const styles = ({ palette, spacing }) =>
+    createStyles({
+        root: {
+            display: 'flex'
+        },
+        card: {
+            // maxWidth: 450,
+        },
+        cardContent: {
+            height: 400
+        }
+    });
 
 class Dashboard extends React.Component {
     render() {
@@ -36,7 +37,7 @@ class Dashboard extends React.Component {
             <Query query={GET_CONFIG}>
                 {({ loading, error, data }) => {
                     if (loading) {
-                        return "Loading...";
+                        return 'Loading...';
                     }
                     if (error) {
                         return `Error! ${error.message}`;
@@ -47,7 +48,8 @@ class Dashboard extends React.Component {
                             <Grid item={true} xs={6}>
                                 <Card className={classes.card}>
                                     <CardContent>
-                                        Game: {status.gameTitle}<br />
+                                        Game: {status.gameTitle}
+                                        <br />
                                         Title: {status.title}
                                     </CardContent>
                                 </Card>
@@ -56,16 +58,14 @@ class Dashboard extends React.Component {
                             <Grid item={true} xs={6}>
                                 <Card className={classes.card}>
                                     <CardContent>
-                                        {status.online &&
-                                            (<span>
-                                                Current: {status.numViewers} -
-                                                Chat Messages: 25 -
-                                                Uptime: {status.uptime}<br />
-                                            </span>)
-                                        }
-                                        Views: 854 -
-                                        Followers: 110 -
-                                        Subs: 1
+                                        {status.online && (
+                                            <span>
+                                                Current: {status.numViewers} - Chat Messages: 25 -
+                                                Uptime: {status.uptime}
+                                                <br />
+                                            </span>
+                                        )}
+                                        Views: 854 - Followers: 110 - Subs: 1
                                     </CardContent>
                                 </Card>
                             </Grid>
@@ -96,7 +96,7 @@ class Dashboard extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        status: state.status,
+        status: state.status
     };
 };
 

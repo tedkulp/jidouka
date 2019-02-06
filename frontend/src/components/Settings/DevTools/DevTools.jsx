@@ -4,11 +4,12 @@ import { Button, Card, CardHeader, CardContent } from '@material-ui/core';
 
 import socket from '../../../util/socket';
 
-const styles = ({ palette, spacing }) => createStyles({
-    root: {
-        display: 'flex',
-    },
-});
+const styles = ({ palette, spacing }) =>
+    createStyles({
+        root: {
+            display: 'flex'
+        }
+    });
 
 class DevTools extends React.Component {
     clickFollow() {
@@ -19,8 +20,8 @@ class DevTools extends React.Component {
                 from_name: 'test_follower',
                 to_id: '12346',
                 to_name: 'streamer',
-                followed_at: Date.now(),
-            },
+                followed_at: Date.now()
+            }
         });
     }
 
@@ -32,8 +33,12 @@ class DevTools extends React.Component {
                 <Card className={classes.card}>
                     <CardHeader title="Dev Utilities" />
                     <CardContent className={classes.cardContent}>
-                        <Button variant="outlined" onClick={this.clickFollow}>Test Follow</Button>
-                        <Button variant="outlined" onClick={this.clickSubscribe}>Test Subscribe</Button>
+                        <Button variant="outlined" onClick={this.clickFollow}>
+                            Test Follow
+                        </Button>
+                        <Button variant="outlined" onClick={this.clickSubscribe}>
+                            Test Subscribe
+                        </Button>
                     </CardContent>
                 </Card>
             </div>
