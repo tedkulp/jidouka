@@ -1,70 +1,111 @@
+import axios from 'axios';
+import moment from 'moment';
+
+import api from './api';
+import config from './config';
+import logger from './logger';
 import { app } from './servers/express';
 import redis from './servers/redis';
-import moment from 'moment';
-import config from './config';
-import axios from 'axios';
-import logger from './logger';
-import api from './api';
 
 const refreshClient = async () => {
-    return axios.post('https://id.twitch.tv/oauth2/token', {}, {
-        params: {
-            client_id: config.getClientId(),
-            client_secret: config.getClientSecret(),
-            grant_type: 'client_credentials',
-            scope: config.getBotScopes().join(' '),
-        }
-    }).then(oauthResponse => {
-        redis.set('client:oauth:expires', moment().add(oauthResponse.data['expires_in'], 's').unix().toString());
-        redis.set('client:oauth:access_token', oauthResponse.data['access_token']);
-    });
+    return axios
+        .post(
+            'https://id.twitch.tv/oauth2/token',
+            {},
+            {
+                params: {
+                    client_id: config.getClientId(),
+                    client_secret: config.getClientSecret(),
+                    grant_type: 'client_credentials',
+                    scope: config.getBotScopes().join(' ')
+                }
+            }
+        )
+        .then(oauthResponse => {
+            redis.set(
+                'client:oauth:expires',
+                moment()
+                    .add(oauthResponse.data['expires_in'], 's')
+                    .unix()
+                    .toString()
+            );
+            redis.set('client:oauth:access_token', oauthResponse.data['access_token']);
+        });
 };
 
 const refreshUser = async (type: string) => {
-    return axios.post('https://id.twitch.tv/oauth2/token', {}, {
-        params: {
-            client_id: config.getClientId(),
-            client_secret: config.getClientSecret(),
-            refresh_token: await redis.getAsync(`${type}:oauth:refresh_token`),
-            grant_type: 'refresh_token',
-        }
-    }).then(async (oauthResponse) => {
-        redis.set(`${type}:oauth:expires`, moment().add(oauthResponse.data['expires_in'], 's').unix().toString());
-        redis.set(`${type}:oauth:access_token`, oauthResponse.data['access_token']);
-        redis.set(`${type}:oauth:refresh_token`, oauthResponse.data['refresh_token']);
+    return axios
+        .post(
+            'https://id.twitch.tv/oauth2/token',
+            {},
+            {
+                params: {
+                    client_id: config.getClientId(),
+                    client_secret: config.getClientSecret(),
+                    refresh_token: await redis.getAsync(`${type}:oauth:refresh_token`),
+                    grant_type: 'refresh_token'
+                }
+            }
+        )
+        .then(async oauthResponse => {
+            redis.set(
+                `${type}:oauth:expires`,
+                moment()
+                    .add(oauthResponse.data['expires_in'], 's')
+                    .unix()
+                    .toString()
+            );
+            redis.set(`${type}:oauth:access_token`, oauthResponse.data['access_token']);
+            redis.set(`${type}:oauth:refresh_token`, oauthResponse.data['refresh_token']);
 
-        const userDetails = await api.getUserDetailsFromToken(oauthResponse.data['access_token']);
-        if (userDetails) {
-            redis.set(`${type}:twitch_id`, userDetails['id']);
-            redis.set(`${type}:username`, userDetails['login']);
-            redis.set(`${type}:display_name`, userDetails['display_name']);
-            redis.set(`${type}:broadcaster_type`, userDetails['broadcaster_type']);
-        }
-    });
-}
+            const userDetails = await api.getUserDetailsFromToken(
+                oauthResponse.data['access_token']
+            );
+            if (userDetails) {
+                redis.set(`${type}:twitch_id`, userDetails['id']);
+                redis.set(`${type}:username`, userDetails['login']);
+                redis.set(`${type}:display_name`, userDetails['display_name']);
+                redis.set(`${type}:broadcaster_type`, userDetails['broadcaster_type']);
+            }
+        });
+};
 
 const oauthFollowUp = async (type: string, code: string) => {
-    return axios.post('https://id.twitch.tv/oauth2/token', {}, {
-        params: {
-            client_id: config.getClientId(),
-            client_secret: config.getClientSecret(),
-            code: code,
-            grant_type: 'authorization_code',
-            redirect_uri: `${config.getHostname()}/oauth`,
-        },
-    }).then(async (oauthResponse) => {
-        redis.set(`${type}:oauth:expires`, moment().add(oauthResponse.data['expires_in'], 's').unix().toString());
-        redis.set(`${type}:oauth:access_token`, oauthResponse.data['access_token']);
-        redis.set(`${type}:oauth:refresh_token`, oauthResponse.data['refresh_token']);
+    return axios
+        .post(
+            'https://id.twitch.tv/oauth2/token',
+            {},
+            {
+                params: {
+                    client_id: config.getClientId(),
+                    client_secret: config.getClientSecret(),
+                    code,
+                    grant_type: 'authorization_code',
+                    redirect_uri: `${config.getHostname()}/oauth`
+                }
+            }
+        )
+        .then(async oauthResponse => {
+            redis.set(
+                `${type}:oauth:expires`,
+                moment()
+                    .add(oauthResponse.data['expires_in'], 's')
+                    .unix()
+                    .toString()
+            );
+            redis.set(`${type}:oauth:access_token`, oauthResponse.data['access_token']);
+            redis.set(`${type}:oauth:refresh_token`, oauthResponse.data['refresh_token']);
 
-        const userDetails = await api.getUserDetailsFromToken(oauthResponse.data['access_token']);
-        if (userDetails) {
-            redis.set(`${type}:twitch_id`, userDetails['id']);
-            redis.set(`${type}:username`, userDetails['login']);
-            redis.set(`${type}:display_name`, userDetails['display_name']);
-            redis.set(`${type}:broadcaster_type`, userDetails['broadcaster_type']);
-        }
-    });
+            const userDetails = await api.getUserDetailsFromToken(
+                oauthResponse.data['access_token']
+            );
+            if (userDetails) {
+                redis.set(`${type}:twitch_id`, userDetails['id']);
+                redis.set(`${type}:username`, userDetails['login']);
+                redis.set(`${type}:display_name`, userDetails['display_name']);
+                redis.set(`${type}:broadcaster_type`, userDetails['broadcaster_type']);
+            }
+        });
 };
 
 const oauthRefresh = async () => {
@@ -74,19 +115,19 @@ const oauthRefresh = async () => {
     const botExpiry = await redis.getAsync('bot:oauth:expires');
     const clientExpiry = await redis.getAsync('client:oauth:expires');
 
-    if (streamerExpiry && (CURRENT_TIME + EXPIRE_THRESHOLD) > streamerExpiry) {
+    if (streamerExpiry && CURRENT_TIME + EXPIRE_THRESHOLD > streamerExpiry) {
         logger.info('REFRESHING STREAMER TOKEN!!!!!');
         await refreshUser('streamer');
     }
 
-    if (botExpiry && (CURRENT_TIME + EXPIRE_THRESHOLD) > botExpiry) {
+    if (botExpiry && CURRENT_TIME + EXPIRE_THRESHOLD > botExpiry) {
         logger.info('REFRESHING BOT TOKEN!!!!!');
         await refreshUser('bot');
     }
 
     // If there is no expiry, then we never got the client token or redis is reset
     // Since it requires no user intervention, just get it
-    if (!clientExpiry || (CURRENT_TIME + EXPIRE_THRESHOLD) > clientExpiry) {
+    if (!clientExpiry || CURRENT_TIME + EXPIRE_THRESHOLD > clientExpiry) {
         logger.info('REFRESHING CLIENT TOKEN!!!!!');
         await refreshClient();
     }
@@ -113,5 +154,5 @@ app.getAsync('/oauth', async (req, res) => {
 export function init() {
     // Check every 10 min for oauth expiration
     oauthRefresh();
-    setInterval(oauthRefresh, (1000 * 60 * 10));
-};
+    setInterval(oauthRefresh, 1000 * 60 * 10);
+}

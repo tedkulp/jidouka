@@ -4,7 +4,7 @@ import config from '../config';
 
 export function useInflux() {
     return config.useInflux();
-};
+}
 
 export const influx = new Influx.InfluxDB({
     host: config.getInfluxHost(),
@@ -14,33 +14,24 @@ export const influx = new Influx.InfluxDB({
         {
             measurement: 'viewers',
             fields: {
-                numViewers: Influx.FieldType.INTEGER,
+                numViewers: Influx.FieldType.INTEGER
             },
-            tags: [
-                'channel'
-            ],
+            tags: ['channel']
         },
         {
             measurement: 'messages',
             fields: {
-                numMessages: Influx.FieldType.INTEGER,
+                numMessages: Influx.FieldType.INTEGER
             },
-            tags: [
-                'channel',
-            ]
+            tags: ['channel']
         },
         {
             measurement: 'events',
             fields: {
                 title: Influx.FieldType.STRING,
-                text: Influx.FieldType.STRING,
+                text: Influx.FieldType.STRING
             },
-            tags: [
-                'type',
-                'channel',
-                'username',
-                'amount',
-            ],
+            tags: ['type', 'channel', 'username', 'amount']
         }
-    ],
+    ]
 });

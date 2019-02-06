@@ -1,28 +1,35 @@
-import mongoose from 'mongoose';
-import CommandManager from '../../src/commands';
 import * as _ from 'lodash';
+import mongoose from 'mongoose';
+
+import CommandManager from '../../src/commands';
+
+// tslint:disable:variable-name
 
 export interface ICustomCommand {
-    commandName: string,
-    message: string,
-    timesRun: number,
-    updatedAt: Date,
-    createdAt: Date,
+    commandName: string;
+    message: string;
+    timesRun: number;
+    updatedAt: Date;
+    createdAt: Date;
 }
 
-export interface ICustomCommandModel extends ICustomCommand, mongoose.Document {
-}
+export interface ICustomCommandModel extends ICustomCommand, mongoose.Document {}
 
-export const CustomCommandSchema: mongoose.Schema = new mongoose.Schema({
-    commandName: { type: String, required: true },
-    message: { type: String, required: true },
-    timesRun: { type: Number, required: true, default: 0 },
-}, {
-    timestamps: true,
-    collection: 'customCommands',
-});
+export const CustomCommandSchema: mongoose.Schema = new mongoose.Schema(
+    {
+        commandName: { type: String, required: true },
+        message: { type: String, required: true },
+        timesRun: { type: Number, required: true, default: 0 }
+    },
+    {
+        timestamps: true,
+        collection: 'customCommands'
+    }
+);
 
-export const CustomCommandModel: mongoose.Model<ICustomCommandModel> = mongoose.model<ICustomCommandModel>('CustomCommandModel', CustomCommandSchema);
+export const CustomCommandModel: mongoose.Model<ICustomCommandModel> = mongoose.model<
+    ICustomCommandModel
+>('CustomCommandModel', CustomCommandSchema);
 
 export function graphQLConfig() {
     return {
@@ -48,7 +55,7 @@ export function graphQLConfig() {
         `,
         resolvers: {
             Query: {
-                customCommands: async (_, args) => await CustomCommandModel.find(args),
+                customCommands: async (_i, args) => CustomCommandModel.find(args)
             },
             Mutation: {
                 addCustomCommand: async (_root, args) => {
@@ -60,39 +67,46 @@ export function graphQLConfig() {
                     });
                 },
                 editCustomCommand: async (_root, args) => {
-                    return CustomCommandModel.findOneAndUpdate({ _id: args.id }, args).exec().then(res => {
-                        unregisterCommands();
-                        return registerCommands().then(() => {
-                            return _.isArray(res) ? _.first(res) : res;
+                    return CustomCommandModel.findOneAndUpdate({ _id: args.id }, args)
+                        .exec()
+                        .then(res => {
+                            unregisterCommands();
+                            return registerCommands().then(() => {
+                                return _.isArray(res) ? _.first(res) : res;
+                            });
                         });
-                    });
                 },
-                deleteCustomCommand: async(_root, args) => {
-                    return CustomCommandModel.findOneAndDelete({ _id: args.id }).exec().then(res => {
-                        unregisterCommands();
-                        return registerCommands().then(() => {
-                            return true;
+                deleteCustomCommand: async (_root, args) => {
+                    return CustomCommandModel.findOneAndDelete({ _id: args.id })
+                        .exec()
+                        .then(res => {
+                            unregisterCommands();
+                            return registerCommands().then(() => {
+                                return true;
+                            });
                         });
-                    });
-                },
-            },
-        },
+                }
+            }
+        }
     };
 }
 
-let commands: Array<ICustomCommand> = [];
+let commands: ICustomCommand[] = [];
 
 function registerCommands() {
     return CustomCommandModel.find().then(res => {
         res.forEach(cmd => {
             CommandManager.register(cmd.commandName, () => {
-                return cmd.update({
-                    $inc: {
-                        timesRun: 1,
-                    },
-                }).exec().then(() => {
-                    return cmd.message;
-                });
+                return cmd
+                    .update({
+                        $inc: {
+                            timesRun: 1
+                        }
+                    })
+                    .exec()
+                    .then(() => {
+                        return cmd.message;
+                    });
             });
             commands.push(cmd);
         });

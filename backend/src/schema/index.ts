@@ -1,7 +1,8 @@
-import { ApolloServer, mergeSchemas, makeExecutableSchema } from 'apollo-server-express';
-import Query from './query';
-import ISODate from './ISODate';
+import { ApolloServer, makeExecutableSchema, mergeSchemas } from 'apollo-server-express';
+
 import extMgr from '../extensions';
+import ISODate from './ISODate';
+import Query from './query';
 
 const typeDefs = `
     type User {
@@ -59,19 +60,19 @@ export function getServer() {
 
         const mainSchema = makeExecutableSchema({
             typeDefs,
-            resolvers,
+            resolvers
         });
 
         const merged = mergeSchemas({
-            schemas: [ mainSchema, ...extensionSchemas ],
-            resolvers: [ resolvers, ...extensionResolvers ],
+            schemas: [mainSchema, ...extensionSchemas],
+            resolvers: [resolvers, ...extensionResolvers]
         });
 
         server = new ApolloServer({
             schema: merged,
-            debug: true,
+            debug: true
         });
     }
 
     return server;
-};
+}

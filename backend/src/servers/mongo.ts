@@ -1,12 +1,11 @@
-import { MongoClient, Db } from 'mongodb';
-import mongoose, { mongo } from 'mongoose';
 import cachegoose from 'cachegoose';
+import { MongoClient } from 'mongodb';
+import mongoose from 'mongoose';
 
-import redis from './redis';
 import config from '../config';
 
 const getClient = async () => {
-    return await MongoClient.connect(config.getMongoUri(), { useNewUrlParser: true });
+    return MongoClient.connect(config.getMongoUri(), { useNewUrlParser: true });
 };
 
 const getDb = async () => {
@@ -15,13 +14,15 @@ const getDb = async () => {
 };
 
 const init = () => {
-    mongoose.connect(`${config.getMongoUri()}/${config.getMongoDbName()}`, { useNewUrlParser: true });
+    mongoose.connect(`${config.getMongoUri()}/${config.getMongoDbName()}`, {
+        useNewUrlParser: true
+    });
     mongoose.set('useCreateIndex', true);
 
     cachegoose(mongoose, {
         engine: 'redis',
         port: config.getRedisPort(),
-        host: config.getRedisHost(),
+        host: config.getRedisHost()
     });
 };
 
@@ -31,9 +32,4 @@ const close = () => {
     }
 };
 
-export {
-    getClient,
-    getDb,
-    init,
-    close,
-};
+export { getClient, getDb, init, close };

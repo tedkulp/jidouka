@@ -1,21 +1,21 @@
-import _ from 'lodash';
-import { init as mongoInit, close as mongoClose } from './src/servers/mongo';
-import redis from './src/servers/redis';
-import { app, http, shutdownManager, proxy, staticServer } from './src/servers/express';
 import fs from 'fs';
+import _ from 'lodash';
+
+import { app, http, proxy, shutdownManager, staticServer } from './src/servers/express';
+import { close as mongoClose, init as mongoInit } from './src/servers/mongo';
+import redis from './src/servers/redis';
 
 import { connect as client } from './src/client';
-import { getServer } from './src/schema';
 import commands from './src/commands';
+import extensions from './src/extensions';
 import io from './src/io';
 import logger from './src/logger';
-import extensions from './src/extensions';
 import { init as oauthInit } from './src/oauth';
-
+import { getServer } from './src/schema';
 import state from './src/state';
 import webhooks from './src/webhooks';
 
-var shuttingDown = false;
+let shuttingDown = false;
 
 // Handle ctrl-c
 const shutdown = async () => {
@@ -46,7 +46,7 @@ const shutdown = async () => {
             process.exit(1);
         }, 5000);
     }, 2500);
-}
+};
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 process.on('SIGUSR2', shutdown);

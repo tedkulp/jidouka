@@ -1,63 +1,71 @@
-import moment, { now } from 'moment';
-import { isEmpty, has, get } from 'lodash';
+import { get, has, isEmpty } from 'lodash';
+import moment from 'moment';
+
 import api from './api';
-import log from './logger';
 import events from './events';
 import logger from './logger';
 
-type apiLimitValues = {
-    limit: number | null,
-    remaining: number | null,
-    refresh: moment.Moment | null,
-};
+interface IApiLimitValues {
+    limit: number | null;
+    remaining: number | null;
+    refresh: moment.Moment | null;
+}
 
-type apiLimitMap = { [s: string]: apiLimitValues };
+interface IApiLimitMap {
+    [s: string]: IApiLimitValues;
+}
 
 class State {
-    online: boolean = false;
-    onlineStartTime: moment.Moment | null = null;
-    apiLimits: apiLimitMap = {};
-    numViewers: number | null = 0;
-    title: string | null = '';
-    gameId: number | null = 0;
-    gameTitle: string | null = '';
-    language: string | null = '';
+    public online: boolean = false;
+    public onlineStartTime: moment.Moment | null = null;
+    public apiLimits: IApiLimitMap = {};
+    public numViewers: number | null = 0;
+    public title: string | null = '';
+    public gameId: number | null = 0;
+    public gameTitle: string | null = '';
+    public language: string | null = '';
 
-    async init() {
-        events.register('status', 'stream', 'Constantly updated status of stream. Fires every 30 seconds.');
+    public async init() {
+        events.register(
+            'status',
+            'stream',
+            'Constantly updated status of stream. Fires every 30 seconds.'
+        );
         events.register('status', 'changegame', 'Fired when the game changes');
         this.updateStatus();
         setInterval(this.updateStatus.bind(this), 30 * 1000);
     }
 
-    async updateStatus() {
+    public async updateStatus() {
         try {
             const streamData = await api.getStreamData();
-            this.setNumViewers(parseInt(get(streamData, 'viewer_count', 0)));
+            this.setNumViewers(parseInt(get(streamData, 'viewer_count', 0), 10));
             this.setTitle(get(streamData, 'title', ''));
             this.setLanguage(get(streamData, 'language', 'en'));
             this.setOnline(get(streamData, 'type', '') === 'live');
-            this.setOnlineStartTime(has(streamData, 'started_at') ? moment(get(streamData, 'started_at')) : null);
-            await this.setGameId(parseInt(get(streamData, 'game_id', 0)));
+            this.setOnlineStartTime(
+                has(streamData, 'started_at') ? moment(get(streamData, 'started_at')) : null
+            );
+            await this.setGameId(parseInt(get(streamData, 'game_id', 0), 10));
 
             events.trigger('status', 'stream', this.toJSON());
 
-            log.silly('current state', this);
+            logger.silly('current state', this);
         } catch (e) {
             // TODO: What are we doing with errors?
             console.error(e);
         }
     }
 
-    setNumViewers(numViewers: number) {
+    public setNumViewers(numViewers: number) {
         this.numViewers = numViewers;
     }
 
-    setTitle(title: string) {
+    public setTitle(title: string) {
         this.title = title;
     }
 
-    async setGameId(gameId: number) {
+    public async setGameId(gameId: number) {
         if (this.gameId !== gameId) {
             logger.debug('Updating game title');
 
@@ -67,27 +75,27 @@ class State {
             if (!isEmpty(gameTitle)) {
                 logger.debug('Trigger changegame event');
                 events.trigger('status', 'changegame', {
-                    title: gameTitle,
+                    title: gameTitle
                 });
             }
         }
         this.gameId = gameId;
     }
 
-    setGameTitle(gameTitle: string) {
+    public setGameTitle(gameTitle: string) {
         this.gameTitle = gameTitle;
     }
 
-    setLanguage(language: string) {
+    public setLanguage(language: string) {
         this.language = language;
     }
 
-    isOnline() {
+    public isOnline() {
         // TODO: redis
         return this.online;
     }
 
-    setOnline(online: boolean) {
+    public setOnline(online: boolean) {
         if (!online && this.online) {
             // We went offline
             this.clearOnlineStartTime();
@@ -95,27 +103,27 @@ class State {
         this.online = online;
     }
 
-    getOnlineStartTime() : moment.Moment {
+    public getOnlineStartTime(): moment.Moment {
         return this.onlineStartTime;
     }
 
-    setOnlineStartTime(startTime: moment.Moment) {
+    public setOnlineStartTime(startTime: moment.Moment) {
         this.onlineStartTime = startTime;
     }
 
-    clearOnlineStartTime() {
+    public clearOnlineStartTime() {
         this.onlineStartTime = null;
     }
 
-    getApiLimit(type) {
+    public getApiLimit(type) {
         return this.apiLimits[type];
     }
 
-    setApiLimit(type: string, limit, remaining, refresh) {
-        const limits: apiLimitValues = {
+    public setApiLimit(type: string, limit, remaining, refresh) {
+        const limits: IApiLimitValues = {
             limit,
             remaining,
-            refresh: moment.unix(refresh),
+            refresh: moment.unix(refresh)
         };
 
         this.apiLimits[type] = limits;
@@ -123,7 +131,7 @@ class State {
         // console.log(this.apiLimits);
     }
 
-    toJSON() {
+    public toJSON() {
         return {
             online: this.online,
             onlineStartTime: this.onlineStartTime ? this.onlineStartTime.format() : '',
@@ -131,7 +139,7 @@ class State {
             title: this.title,
             gameId: this.gameId,
             gameTitle: this.gameTitle,
-            language: this.language,
+            language: this.language
         };
     }
 }

@@ -1,5 +1,5 @@
-import { Kind } from 'graphql/language';
 import { GraphQLScalarType } from 'graphql';
+import { Kind } from 'graphql/language';
 
 const returnOnError = (operation, alternative) => {
     try {
@@ -14,7 +14,7 @@ function serialize(value) {
 }
 
 function parseValue(value) {
-    return returnOnError(() => value == null ? null : new Date(value), null);
+    return returnOnError(() => (value == null ? null : new Date(value)), null);
 }
 
 function parseLiteral(ast) {
@@ -24,5 +24,7 @@ function parseLiteral(ast) {
 export default new GraphQLScalarType({
     name: 'ISODate',
     description: 'JavaScript Date object as an ISO timestamp',
-    serialize, parseValue, parseLiteral
+    serialize,
+    parseValue,
+    parseLiteral
 });

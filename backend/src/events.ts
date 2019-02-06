@@ -1,14 +1,15 @@
-import { Set, hash } from 'immutable';
-import logger from './logger';
-import io from './io';
+import { hash, Set } from 'immutable';
 import _ from 'lodash';
 
-type EventCallback = (details: Object, description?: string) => void;
+import io from './io';
+// import logger from './logger';
+
+type EventCallback = (details: object, description?: string) => void;
 
 class EventDefinition {
-    eventName: string;
-    description: string;
-    listeners: Set<EventCallback> = Set();
+    public eventName: string;
+    public description: string;
+    public listeners: Set<EventCallback> = Set();
 
     constructor(eventName: string, description: string) {
         this.eventName = eventName;
@@ -16,37 +17,45 @@ class EventDefinition {
         this.listeners = Set();
     }
 
-    addListener(fn: EventCallback): void {
+    public addListener(fn: EventCallback): void {
         this.listeners = this.listeners.add(fn);
     }
 
-    removeListener(fn: EventCallback): void {
+    public removeListener(fn: EventCallback): void {
         this.listeners = this.listeners.remove(fn);
     }
 
-    clearListeners(): void {
+    public clearListeners(): void {
         this.listeners = this.listeners.clear();
     }
 
-    trigger(details: Object): void {
+    public trigger(details: object): void {
         // logger.debug(['event triggered', this.eventName, this.description, details]);
-        this.listeners.forEach(fn => _.defer((details, description) => fn(details, description), details, this.description));
+        this.listeners.forEach(fn =>
+            _.defer(
+                (fnDetails, description) => fn(fnDetails, description),
+                details,
+                this.description
+            )
+        );
         io.broadcast(this.eventName, details);
     }
 
-    equals(v: EventDefinition): boolean {
+    public equals(v: EventDefinition): boolean {
         return this.eventName === v.eventName;
     }
 
-    hashCode(): number {
+    public hashCode(): number {
         return hash(this.eventName);
     }
 }
 
-class EventManager {
-    events: Set<EventDefinition>;
+// tslint:disable:max-classes-per-file
 
-    register(group: string, eventName: string, description: string): EventDefinition {
+class EventManager {
+    public events: Set<EventDefinition>;
+
+    public register(group: string, eventName: string, description: string): EventDefinition {
         this.events = this.events || Set();
 
         let event: EventDefinition = this.getDefinition(group, eventName);
@@ -60,7 +69,7 @@ class EventManager {
         return event;
     }
 
-    addListener(group: string, eventName: string, fn: EventCallback): void {
+    public addListener(group: string, eventName: string, fn: EventCallback): void {
         let event: EventDefinition = this.getDefinition(group, eventName);
         if (!event) {
             event = this.register(group, eventName, '');
@@ -69,39 +78,39 @@ class EventManager {
         event.addListener(fn);
     }
 
-    removeListener(group: string, eventName: string, fn: EventCallback): void {
+    public removeListener(group: string, eventName: string, fn: EventCallback): void {
         const event: EventDefinition = this.getDefinition(group, eventName);
         if (event) {
             event.removeListener(fn);
         }
     }
 
-    trigger(group: string, eventName: string, details?: Object): void {
+    public trigger(group: string, eventName: string, details?: object): void {
         const event: EventDefinition = this.getDefinition(group, eventName);
         if (event) {
             event.trigger(details || {});
         }
     }
 
-    getEventNames(group?: string): Array<string> {
+    public getEventNames(group?: string): string[] {
         if (group) {
             return this.events
                 .filter(event => event.eventName.startsWith(group + '.'))
                 .map((event): string => event.eventName)
                 .toArray();
         } else {
-            return this.events
-                .map((event): string => event.eventName)
-                .toArray();
+            return this.events.map((event): string => event.eventName).toArray();
         }
     }
 
-    getDefinition(group: string, eventName: string): EventDefinition {
+    public getDefinition(group: string, eventName: string): EventDefinition {
         this.events = this.events || Set();
-        return this.events.find(event => event.eventName === this.createEventName(group, eventName));
+        return this.events.find(
+            event => event.eventName === this.createEventName(group, eventName)
+        );
     }
 
-    createEventName(group: string, eventName: string): string {
+    public createEventName(group: string, eventName: string): string {
         return `${group}.${eventName}`;
     }
 }
