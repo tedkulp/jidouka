@@ -4,7 +4,6 @@ import { v4 } from 'uuid';
 const STATE_TOKEN = v4();
 
 class Config {
-
     private _data = {};
     private _loaded = false;
     private _stateToken = STATE_TOKEN;
@@ -14,7 +13,7 @@ class Config {
         'whispers:read',
         'whispers:edit',
         'channel_subscriptions',
-        'channel_check_subscription',
+        'channel_check_subscription'
     ];
 
     private _botScopes = [
@@ -27,48 +26,27 @@ class Config {
         'channel_commercial',
         'clips:edit',
         'user:edit:broadcast',
-        'user:read:broadcast',
+        'user:read:broadcast'
     ];
-
-    private loadData() {
-        if (!this._loaded)  {
-            try {
-                this._data = require('../config/config.json');
-            } catch(e) {
-                // TODO: Make this do something
-            } finally {
-                this._loaded = true;
-            }
-        }
-    }
-
-    private getValue(configKeyName: string, envName?: string) {
-        if (envName && process.env[envName]) {
-            return process.env[envName];
-        } else {
-            this.loadData();
-            return _.get(this._data, configKeyName);
-        }
-    }
 
     public toJSON() {
         return {
             streamer: {
-                username: this.getStreamerName(),
+                username: this.getStreamerName()
             },
             redis: {
                 host: this.getRedisHost(),
-                port: this.getRedisPort(),
+                port: this.getRedisPort()
             },
             mongo: {
                 url: this.getMongoUri(),
-                dbName: this.getMongoDbName(),
+                dbName: this.getMongoDbName()
             },
             influxdb: {
                 enable: this.useInflux(),
                 host: this.getInfluxHost(),
                 port: this.getInfluxPort(),
-                dbName: this.getInfluxDbName(),
+                dbName: this.getInfluxDbName()
             },
             options: {
                 panelUser: this.getPanelUser(),
@@ -76,13 +54,13 @@ class Config {
                 hostname: this.getHostname(),
                 clientId: this.getClientId(),
                 clientSecret: this.getClientSecret(),
-                logLevel: this.getLogLevel(),
+                logLevel: this.getLogLevel()
             },
             scopes: {
                 streamer: this.getStreamerScopes(),
-                bot: this.getBotScopes(),
+                bot: this.getBotScopes()
             },
-            stateToken: this.getStateToken(),
+            stateToken: this.getStateToken()
         };
     }
 
@@ -91,7 +69,7 @@ class Config {
     }
 
     public getInfluxDbName(): string {
-        return this.getValue('influx.dbName', 'INFLUX_DBNAME') || "jidouka";
+        return this.getValue('influx.dbName', 'INFLUX_DBNAME') || 'jidouka';
     }
 
     public getInfluxPort(): number {
@@ -111,7 +89,7 @@ class Config {
     }
 
     public getRedisPort(): number {
-        return parseInt(this.getValue('redis.port', 'REDIS_PORT')) || 6379;
+        return parseInt(this.getValue('redis.port', 'REDIS_PORT'), 10) || 6379;
     }
 
     public getMongoUri(): string {
@@ -156,6 +134,27 @@ class Config {
 
     public getBotScopes(): string[] {
         return this._botScopes;
+    }
+
+    private loadData() {
+        if (!this._loaded) {
+            try {
+                this._data = require('../config/config.json');
+            } catch (e) {
+                // TODO: Make this do something
+            } finally {
+                this._loaded = true;
+            }
+        }
+    }
+
+    private getValue(configKeyName: string, envName?: string) {
+        if (envName && process.env[envName]) {
+            return process.env[envName];
+        } else {
+            this.loadData();
+            return _.get(this._data, configKeyName);
+        }
     }
 }
 

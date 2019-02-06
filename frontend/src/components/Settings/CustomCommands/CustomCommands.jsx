@@ -1,43 +1,57 @@
 import * as React from 'react';
 
 import { createStyles, withStyles } from '@material-ui/core/styles';
-import { Table, TableHead, TableBody, TableRow, TableCell, Paper, Fab, IconButton, Menu, MenuItem } from '@material-ui/core';
+import {
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Paper,
+    Fab,
+    IconButton,
+    Menu,
+    MenuItem
+} from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 
-import { Query, Mutation } from "react-apollo";
-import gql from "graphql-tag";
+import { Query, Mutation } from 'react-apollo';
+import gql from 'graphql-tag';
 import Form from './Form';
 
-const styles = theme => createStyles({
-    root: {
-        display: 'flex',
-    },
-    fab: {
-        position: 'absolute',
-        bottom: theme.spacing.unit * 2,
-        right: theme.spacing.unit * 2,
-    },
-});
+const styles = theme =>
+    createStyles({
+        root: {
+            display: 'flex'
+        },
+        fab: {
+            position: 'absolute',
+            bottom: theme.spacing.unit * 2,
+            right: theme.spacing.unit * 2
+        }
+    });
 
 export const GET_CONFIG = gql`
-{
-    customCommands {
-        id
-        commandName
-        message
-        timesRun
+    {
+        customCommands {
+            id
+            commandName
+            message
+            timesRun
+        }
     }
-}`;
+`;
 
 const DELETE_COMMAND = gql`
-mutation DeleteCustomCommand($id: String!) {
-    deleteCustomCommand(id: $id)
-}`;
+    mutation DeleteCustomCommand($id: String!) {
+        deleteCustomCommand(id: $id)
+    }
+`;
 
 class ListItemMenu extends React.Component {
     state = {
-        anchorEl: null,
+        anchorEl: null
     };
 
     handleClick = event => {
@@ -48,20 +62,19 @@ class ListItemMenu extends React.Component {
         this.setState({ anchorEl: null });
     };
 
-    onEditClick = (cmd) => {
+    onEditClick = cmd => {
         this.props.onEditClick(cmd);
         this.setState({ anchorEl: null });
     };
 
-    onDeleteClick = (cmd) => {
+    onDeleteClick = cmd => {
         this.props.onDeleteClick(cmd);
         this.setState({ anchorEl: null });
     };
 
     render() {
-        const { cmd, onEditClick } = this.props;
+        const { cmd } = this.props;
         const { anchorEl } = this.state;
-        const open = Boolean(anchorEl);
 
         return (
             <TableCell>
@@ -84,7 +97,7 @@ class ListItemMenu extends React.Component {
                 </Menu>
             </TableCell>
         );
-    };
+    }
 }
 
 class CustomCommands extends React.Component {
@@ -107,9 +120,11 @@ class CustomCommands extends React.Component {
         if (this.deleteCustomCommand) {
             this.deleteCustomCommand({
                 variables: cmdObj,
-                refetchQueries: [{
-                    query: GET_CONFIG,
-                }],
+                refetchQueries: [
+                    {
+                        query: GET_CONFIG
+                    }
+                ]
             });
         }
     };
@@ -121,7 +136,7 @@ class CustomCommands extends React.Component {
             <Query query={GET_CONFIG}>
                 {({ loading, error, data }) => {
                     if (loading) {
-                        return "Loading...";
+                        return 'Loading...';
                     }
                     if (error) {
                         return `Error! ${error.message}`;
@@ -129,7 +144,7 @@ class CustomCommands extends React.Component {
 
                     return (
                         <Mutation mutation={DELETE_COMMAND}>
-                            {( deleteCustomCommand ) => {
+                            {deleteCustomCommand => {
                                 this.deleteCustomCommand = deleteCustomCommand;
                                 return (
                                     <React.Fragment>
@@ -140,27 +155,41 @@ class CustomCommands extends React.Component {
                                                     <TableRow>
                                                         <TableCell>Command</TableCell>
                                                         <TableCell>Message</TableCell>
-                                                        <TableCell align="right">Times Run</TableCell>
-                                                        <TableCell></TableCell>
+                                                        <TableCell align="right">
+                                                            Times Run
+                                                        </TableCell>
+                                                        <TableCell />
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
-                                                    {data.customCommands.map((cmd) => (
+                                                    {data.customCommands.map(cmd => (
                                                         <TableRow key={cmd.id}>
                                                             <TableCell>{cmd.commandName}</TableCell>
                                                             <TableCell>{cmd.message}</TableCell>
-                                                            <TableCell align="right">{cmd.timesRun}</TableCell>
-                                                            <ListItemMenu key={cmd.id} cmd={cmd} onEditClick={this.onEditClick} onDeleteClick={this.onDeleteClick} />
+                                                            <TableCell align="right">
+                                                                {cmd.timesRun}
+                                                            </TableCell>
+                                                            <ListItemMenu
+                                                                key={cmd.id}
+                                                                cmd={cmd}
+                                                                onEditClick={this.onEditClick}
+                                                                onDeleteClick={this.onDeleteClick}
+                                                            />
                                                         </TableRow>
                                                     ))}
                                                 </TableBody>
                                             </Table>
                                         </Paper>
-                                        <Fab color="primary" className={classes.fab} onClick={this.onAddClick}>
+                                        <Fab
+                                            color="primary"
+                                            className={classes.fab}
+                                            onClick={this.onAddClick}
+                                        >
                                             <AddIcon />
                                         </Fab>
                                     </React.Fragment>
-                            )}}
+                                );
+                            }}
                         </Mutation>
                     );
                 }}

@@ -1,16 +1,16 @@
-import io from 'socket.io';
-import _ from 'lodash';
-import { Set } from 'immutable';
 import { Server } from 'http';
+import { Set } from 'immutable';
+import _ from 'lodash';
+import io from 'socket.io';
 
-import logger from './logger';
 import events from './events';
+import logger from './logger';
 
 class IoServer {
-    sockets: Set<io.Socket> = Set();
-    server: io.Server | null = null;
+    public sockets: Set<io.Socket> = Set();
+    public server: io.Server | null = null;
 
-    init(http: Server) {
+    public init(http: Server) {
         if (!this.server) {
             this.server = io(http, { path: '/socket.io' });
 
@@ -25,7 +25,7 @@ class IoServer {
                 });
 
                 socket.on('event', data => {
-                    const [ part1, part2 ] = _.get(data, 'event', '').split('.');
+                    const [part1, part2] = _.get(data, 'event', '').split('.');
                     if (part1 && part2) {
                         events.trigger(part1, part2, _.get(data, 'data', {}));
                     }
@@ -34,7 +34,7 @@ class IoServer {
         }
     }
 
-    broadcast(eventName: string, details: any) {
+    public broadcast(eventName: string, details: any) {
         if (this.server) {
             this.sockets.forEach(socket => {
                 socket.emit(eventName, details);
@@ -42,7 +42,7 @@ class IoServer {
         }
     }
 
-    emit(id: string, eventName: string, details: any) {
+    public emit(id: string, eventName: string, details: any) {
         if (this.server) {
             const found = this.sockets.find(s => s.id === id);
             if (found) {
@@ -50,6 +50,6 @@ class IoServer {
             }
         }
     }
-};
+}
 
 export default new IoServer();

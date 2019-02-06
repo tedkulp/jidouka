@@ -1,15 +1,32 @@
 {
-  "name": "jidouka",
-  "version": "1.0.0",
-  "main": "index.js",
-  "repository": "https://github.com/tedkulp/jidouka.git",
-  "author": "Ted Kulp <ted@tedkulp.com>",
-  "license": "MIT",
-  "dependencies": {
-    "concurrently": "^4.0.1"
-  },
-  "scripts": {
-    "dev": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\"",
-    "dev-build": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up --build\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\""
-  }
+    "name": "jidouka",
+    "version": "1.0.0",
+    "main": "index.js",
+    "repository": "https://github.com/tedkulp/jidouka.git",
+    "author": "Ted Kulp <ted@tedkulp.com>",
+    "license": "MIT",
+    "dependencies": {
+        "concurrently": "^4.0.1"
+    },
+    "scripts": {
+        "dev": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\"",
+        "dev-build": "pwd && concurrently -n \"docker,frontend,backend\" -c \"bgBlue.bold,bgMagenta.bold,bgGreen.bold\" \"pwd && docker-compose up --build\" \"pwd && cd frontend && BROWSER=none DANGEROUSLY_DISABLE_HOST_CHECK=true yarn start\" \"pwd && cd backend && ./wait-for-services.sh && yarn watch\"",
+        "lint": "yarn run tslint 'backend/src/**/*.{ts,tsx}' && yarn run eslint 'frontend/src/**/*.{js,jsx}'"
+    },
+    "devDependencies": {
+        "babel-eslint": "9.0.0",
+        "eslint": "5.6.0",
+        "eslint-config-airbnb": "^17.1.0",
+        "eslint-config-prettier": "^4.0.0",
+        "eslint-config-react-app": "^3.0.5",
+        "eslint-plugin-flowtype": "2.50.1",
+        "eslint-plugin-import": "2.14.0",
+        "eslint-plugin-jsx-a11y": "6.1.2",
+        "eslint-plugin-prettier": "^3.0.1",
+        "eslint-plugin-react": "7.11.1",
+        "prettier": "^1.16.4",
+        "tslint": "^5.12.1",
+        "tslint-config-prettier": "^1.18.0",
+        "typescript": "^3.3.1"
+    }
 }

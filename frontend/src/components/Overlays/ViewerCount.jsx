@@ -3,8 +3,8 @@ import { connect } from 'react-redux';
 import { Transition, config } from 'react-spring';
 import { get } from 'lodash';
 
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faTwitch } from '@fortawesome/free-brands-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTwitch } from '@fortawesome/free-brands-svg-icons';
 
 import './ViewerCount.scss';
 
@@ -17,12 +17,14 @@ class ViewerCount extends React.Component {
             <React.Fragment>
                 <Transition
                     config={config.slow}
-                    from={{ opacity: 0, transform: "translateX(100px)", }}
-                    enter={{ opacity: 1, transform: "translateX(0)", }}
-                    leave={{ opacity: 0, transform: "translateX(100px)", }}
-                    items={showDiv}>
+                    from={{ opacity: 0, transform: 'translateX(100px)' }}
+                    enter={{ opacity: 1, transform: 'translateX(0)' }}
+                    leave={{ opacity: 0, transform: 'translateX(100px)' }}
+                    items={showDiv}
+                >
                     {show =>
-                        show && (props => (
+                        show &&
+                        (props => (
                             <div className="viewercount-wrapper" style={props}>
                                 <FontAwesomeIcon className="icon" icon={faTwitch} />
                                 <span className="count">{status.numViewers}</span>
@@ -37,7 +39,7 @@ class ViewerCount extends React.Component {
 
 const mapStateToProps = state => {
     return {
-        status: state.status,
+        status: state.status
     };
 };
 

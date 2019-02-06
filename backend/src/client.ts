@@ -1,12 +1,12 @@
-import tmi from 'twitch-js';
 import _ from 'lodash';
+import tmi from 'twitch-js';
 import util from 'util';
 
-import watchers from './watchers';
-import events from './events';
 import config from './config';
+import events from './events';
 import logger from './logger';
 import redis from './servers/redis';
+import watchers from './watchers';
 
 events.register('chat', 'join', 'User joined channel');
 events.register('chat', 'part', 'User parted channel');
@@ -24,11 +24,12 @@ export let client: tmi.client = null;
 
 export function isConnected() {
     return client !== null;
-};
+}
 
-const connectRetry = async (client) => {
+const connectRetry = async _client => {
     // Set the password every time, in case we're doing a reconnect after a failed token
-    client.opts.identity.password = "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token');
+    client.opts.identity.password =
+        'oauth:' + (await redis.getAsyncWhenAvailable('bot:oauth:access_token'));
 
     return client.connect().catch(err => {
         logger.error('Error connecting', err);
@@ -47,38 +48,47 @@ export async function getClient() {
     logger.debug('Initializing client');
 
     const clientConfig = {
-        "options": {
-            "debug": _.includes(['debug', 'verbose', 'silly'], config.getLogLevel()),
-            "clientId": config.getClientId(),
+        options: {
+            debug: _.includes(['debug', 'verbose', 'silly'], config.getLogLevel()),
+            clientId: config.getClientId()
         },
-        "connection": {
-            "reconnect": false,
+        connection: {
+            reconnect: false
         },
-        "identity": {
-            "username": await redis.getAsyncWhenAvailable('bot:username'),
-            "password": "oauth:" + await redis.getAsyncWhenAvailable('bot:oauth:access_token'),
+        identity: {
+            username: await redis.getAsyncWhenAvailable('bot:username'),
+            password: 'oauth:' + (await redis.getAsyncWhenAvailable('bot:oauth:access_token'))
         },
-        "channels": [`#${await redis.getAsyncWhenAvailable('streamer:username')}`],
+        channels: [`#${await redis.getAsyncWhenAvailable('streamer:username')}`]
     };
 
     // console.log('clientConfig', clientConfig);
     client = new tmi.client(clientConfig);
 
-    const channelClean = (str) => {
-		var channel = typeof str === "undefined" || str === null ? "" : str;
-		return channel.charAt(0) === "#" ? channel.toLowerCase() : "#" + channel.toLowerCase();
-	};
+    const channelClean = str => {
+        const channel = typeof str === 'undefined' || str === null ? '' : str;
+        return channel.charAt(0) === '#' ? channel.toLowerCase() : '#' + channel.toLowerCase();
+    };
 
     client['deleteMessage'] = function deletemessage(channel, messageid) {
         channel = channelClean(channel);
 
         // Send the command to the server and race the Promise against a delay..
-        return this._sendCommand(this._getPromiseDelay(), channel, `/delete ${messageid}`, (resolve, reject) => {
-            // Received _promiseDeletemessage event, resolve or reject..
-            this.once("_promiseDeletemessage", (err) => {
-                if (!err) { resolve([channel]); } else { reject(err); }
-            });
-        });
+        return this._sendCommand(
+            this._getPromiseDelay(),
+            channel,
+            `/delete ${messageid}`,
+            (resolve, reject) => {
+                // Received _promiseDeletemessage event, resolve or reject..
+                this.once('_promiseDeletemessage', err => {
+                    if (!err) {
+                        resolve([channel]);
+                    } else {
+                        reject(err);
+                    }
+                });
+            }
+        );
     };
 
     client.on('disconnected', () => {
@@ -91,7 +101,7 @@ export async function getClient() {
         events.trigger('chat', 'join', {
             channel,
             username,
-            self,
+            self
         });
         // console.log(watchers.getWatchers(channel));
     });
@@ -102,7 +112,7 @@ export async function getClient() {
         events.trigger('chat', 'part', {
             channel,
             username,
-            self,
+            self
         });
         // console.log(watchers.getWatchers(channel));
     });
@@ -111,7 +121,7 @@ export async function getClient() {
         logger.info('names', channel, usernames);
         _.each(usernames, username => {
             watchers.addWatcher(channel, username);
-            //TODO: Send event?
+            // TODO: Send event?
         });
         // console.log(watchers.getWatchers(channel));
     });
@@ -128,7 +138,7 @@ export async function getClient() {
             username,
             method,
             message,
-            userstate,
+            userstate
         });
     });
 
@@ -140,7 +150,7 @@ export async function getClient() {
             months,
             message,
             userstate,
-            methods,
+            methods
         });
     });
 
@@ -152,7 +162,7 @@ export async function getClient() {
         logger.info('mods event', channel, mods);
         _.each(mods, username => {
             watchers.addMod(channel, username);
-            //TODO: Add event?
+            // TODO: Add event?
         });
         // console.log(watchers.getMods(channel));
     });
@@ -162,7 +172,7 @@ export async function getClient() {
         watchers.addMod(channel, username);
         events.trigger('chat', 'mod', {
             channel,
-            username,
+            username
         });
         // console.log(watchers.getMods(channel));
     });
@@ -172,7 +182,7 @@ export async function getClient() {
         watchers.removeMod(channel, username);
         events.trigger('chat', 'unmod', {
             channel,
-            username,
+            username
         });
         // console.log(watchers.getMods(channel));
     });
@@ -187,15 +197,15 @@ export async function getClient() {
             channel,
             username,
             viewers,
-            autohost,
+            autohost
         });
     });
 
-    client.on("hosting", function (channel, target, viewers) {
+    client.on('hosting', (channel, target, viewers) => {
         logger.info('hosting', channel, target, viewers);
     });
 
-    client.on("unhost", function (channel, viewers) {
+    client.on('unhost', (channel, viewers) => {
         logger.info('unhost', channel, viewers);
     });
 
@@ -204,13 +214,15 @@ export async function getClient() {
         events.trigger('chat', 'cheer', {
             channel,
             userstate,
-            message,
+            message
         });
     });
 
     client.on('chat', (channel, userstate, message, self) => {
         // Don't listen to my own messages..
-        if (self) return;
+        if (self) {
+            return;
+        }
 
         console.log(channel, util.inspect(userstate), message, self);
 
@@ -218,7 +230,7 @@ export async function getClient() {
         events.trigger('chat', 'message', {
             channel,
             userstate,
-            message,
+            message
         });
     });
 
@@ -227,7 +239,7 @@ export async function getClient() {
         events.trigger('chat', 'ban', {
             channel,
             username,
-            reason,
+            reason
         });
     });
 
@@ -237,14 +249,14 @@ export async function getClient() {
             channel,
             username,
             reason,
-            duration,
+            duration
         });
     });
 
     return client;
-};
+}
 
 export async function connect() {
-    const client = await getClient();
-    return connectRetry(client);
-};
+    const retClient = await getClient();
+    return connectRetry(retClient);
+}

@@ -1,12 +1,11 @@
 import mongoose from 'mongoose';
 
 export interface IListEntry {
-    createdByUser: String,
-    entryText: String,
-    active: Boolean,
-    updatedAt: Date,
-    createdAt: Date,
-};
+    createdByUser: string;
+    entryText: string;
+    active: boolean;
+    updatedAt: Date;
+    createdAt: Date;
+}
 
-export interface IListEntryModel extends IListEntry, mongoose.Document {
-};
+export interface IListEntryModel extends IListEntry, mongoose.Document {}

@@ -1,49 +1,56 @@
 import * as React from 'react';
 
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@material-ui/core';
+import {
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions,
+    Button
+} from '@material-ui/core';
 
-import { Mutation } from "react-apollo";
+import { Mutation } from 'react-apollo';
 import { adopt } from 'react-adopt';
-import gql from "graphql-tag";
+import gql from 'graphql-tag';
 import { GET_CONFIG } from './CustomCommands';
 import { Formik, Field, Form } from 'formik';
 import { TextField } from 'formik-material-ui';
 
 const ADD_COMMAND = gql`
-mutation AddCustomCommand($commandName: String!, $message: String!) {
-    addCustomCommand(commandName: $commandName, message: $message) {
-        id
-        commandName
-        message
-        timesRun
+    mutation AddCustomCommand($commandName: String!, $message: String!) {
+        addCustomCommand(commandName: $commandName, message: $message) {
+            id
+            commandName
+            message
+            timesRun
+        }
     }
-}`;
+`;
 
 const EDIT_COMMAND = gql`
-mutation EditCustomCommand($id: String!, $commandName: String!, $message: String!) {
-    editCustomCommand(id: $id, commandName: $commandName, message: $message) {
-        id
-        commandName
-        message
-        timesRun
+    mutation EditCustomCommand($id: String!, $commandName: String!, $message: String!) {
+        editCustomCommand(id: $id, commandName: $commandName, message: $message) {
+            id
+            commandName
+            message
+            timesRun
+        }
     }
-}`;
+`;
 
 const addCommand = ({ render }) => (
-    <Mutation mutation={ADD_COMMAND}>
-        {(mutation, result) => render({ mutation, result })}
-    </Mutation>
+    <Mutation mutation={ADD_COMMAND}>{(mutation, result) => render({ mutation, result })}</Mutation>
 );
 
 const editCommand = ({ render }) => (
     <Mutation mutation={EDIT_COMMAND}>
         {(mutation, result) => render({ mutation, result })}
     </Mutation>
-)
+);
 
 const Mutations = adopt({
     addCommand,
-    editCommand,
+    editCommand
 });
 
 class CustomCommandsForm extends React.Component {
@@ -51,8 +58,8 @@ class CustomCommandsForm extends React.Component {
         open: false,
         values: {
             commandName: '',
-            message: '',
-        },
+            message: ''
+        }
     };
 
     handleClickOpen = (cmdObj = null) => {
@@ -60,10 +67,12 @@ class CustomCommandsForm extends React.Component {
         if (cmdObj) {
             this.setState({ values: cmdObj });
         } else {
-            this.setState({ values: {
-                commandName: '',
-                message: '',
-            }});
+            this.setState({
+                values: {
+                    commandName: '',
+                    message: ''
+                }
+            });
         }
     };
 
@@ -74,8 +83,12 @@ class CustomCommandsForm extends React.Component {
     render() {
         return (
             <Mutations>
-                {(mutations) => (
-                    <Dialog open={this.state.open} onClose={this.handleClose} aria-labelledby="custom-command-form">
+                {mutations => (
+                    <Dialog
+                        open={this.state.open}
+                        onClose={this.handleClose}
+                        aria-labelledby="custom-command-form"
+                    >
                         <Formik
                             initialValues={this.state.values}
                             validate={values => {
@@ -100,9 +113,11 @@ class CustomCommandsForm extends React.Component {
                                 }
                                 cmd({
                                     variables: values,
-                                    refetchQueries: [{
-                                        query: GET_CONFIG,
-                                    }],
+                                    refetchQueries: [
+                                        {
+                                            query: GET_CONFIG
+                                        }
+                                    ]
                                 }).then(resp => {
                                     setSubmitting(false);
                                     this.setState({ open: false });
@@ -110,12 +125,14 @@ class CustomCommandsForm extends React.Component {
                             }}
                             render={({ submitForm, isSubmitting, isValid }) => (
                                 <Form>
-                                    <DialogTitle id="custom-command-form">Add/Edit Custom Command</DialogTitle>
+                                    <DialogTitle id="custom-command-form">
+                                        Add/Edit Custom Command
+                                    </DialogTitle>
 
                                     <DialogContent>
                                         <DialogContentText>
-                                            To subscribe to this website, please enter your email address here. We will send
-                                            updates occasionally.
+                                            To subscribe to this website, please enter your email
+                                            address here. We will send updates occasionally.
                                         </DialogContentText>
 
                                         <Field
@@ -139,10 +156,18 @@ class CustomCommandsForm extends React.Component {
                                     </DialogContent>
 
                                     <DialogActions>
-                                        <Button onClick={this.handleClose.bind(this)} disabled={isSubmitting} color="primary">
+                                        <Button
+                                            onClick={this.handleClose.bind(this)}
+                                            disabled={isSubmitting}
+                                            color="primary"
+                                        >
                                             Cancel
                                         </Button>
-                                        <Button onClick={submitForm} disabled={isSubmitting} color="primary">
+                                        <Button
+                                            onClick={submitForm}
+                                            disabled={isSubmitting}
+                                            color="primary"
+                                        >
                                             Submit
                                         </Button>
                                     </DialogActions>

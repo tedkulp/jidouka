@@ -1,8 +1,8 @@
-import { createLogger, format, transports } from 'winston';
-const { SPLAT } = require('triple-beam');
-
-import util from 'util';
 import _ from 'lodash';
+const { SPLAT } = require('triple-beam'); // tslint:disable-line
+import util from 'util';
+import { createLogger, format, transports } from 'winston';
+
 import config from './config';
 
 // {
@@ -18,7 +18,7 @@ const logger = createLogger({
     level: config.getLogLevel(),
     format: format.combine(
         format.splat(),
-        format.timestamp({format: 'HH:mm:ss'}),
+        format.timestamp({ format: 'HH:mm:ss' }),
         format.colorize(),
         format.printf(info => {
             if (info[SPLAT]) {
@@ -27,9 +27,9 @@ const logger = createLogger({
             } else {
                 return `[${info.timestamp}] ${info.level}: ${util.inspect(info.message)}`;
             }
-        }),
+        })
     ),
-    transports: [new transports.Console()],
+    transports: [new transports.Console()]
 });
 
 export default logger;

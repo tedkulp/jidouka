@@ -7,8 +7,6 @@ import './index.scss';
 
 class OverlayIndex extends React.Component {
     render() {
-        const { classes } = this.props;
-
         return (
             <div className="overlay-wrapper">
                 <ViewerCount />

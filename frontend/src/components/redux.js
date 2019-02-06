@@ -11,7 +11,7 @@ const initialState = {
     onlineStartTime: null,
     language: '',
     title: '',
-    uptime: '0:00',
+    uptime: '0:00'
 };
 
 export const reducer = (state = initialState, action) => {
@@ -25,9 +25,9 @@ export const reducer = (state = initialState, action) => {
                 online: action.online,
                 onlineStartTime: action.onlineStartTime,
                 title: action.title,
-                uptime: moment.duration(moment().diff(moment(action.onlineStartTime))).format(),
+                uptime: moment.duration(moment().diff(moment(action.onlineStartTime))).format()
             });
         default:
             return state;
-    };
+    }
 };

@@ -7,7 +7,6 @@ import Dashboard from './Dashboard';
 import './index.scss';
 
 class DashboardIndex extends React.Component {
-
     getDisplayValue() {
         return _.get(this.props, 'location.pathname', '') === '/' ? 'block' : 'none';
     }
@@ -15,7 +14,7 @@ class DashboardIndex extends React.Component {
     render() {
         return (
             <div style={{ display: this.getDisplayValue() }}>
-                <Route path='/' component={Dashboard} />
+                <Route path="/" component={Dashboard} />
             </div>
         );
     }

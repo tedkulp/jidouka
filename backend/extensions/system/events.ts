@@ -5,7 +5,7 @@ events.addListener('webhook', 'follow', (details, _) => {
     EventModel.create({
         eventType: 'follow',
         userId: details['from_id'],
-        username: details['from_name'],
+        username: details['from_name']
     });
 });
 
@@ -15,7 +15,7 @@ events.addListener('chat', 'sub', (details, _) => {
         message: details['message'],
         misc: details['method'],
         userId: details['userstate']['user-id'],
-        username: details['username'],
+        username: details['username']
     });
 });
 
@@ -27,7 +27,7 @@ events.addListener('chat', 'resub', (details, _) => {
         unit: 'months',
         // misc: details['methods'], // Can't find docs on what this would be
         userId: details['userstate']['user-id'],
-        username: details['username'],
+        username: details['username']
     });
 });
 
@@ -39,7 +39,7 @@ events.addListener('chat', 'cheer', (details, _) => {
         unit: 'bits',
         // misc: details['method'],
         userId: details['userstate']['user-id'],
-        username: details['username'],
+        username: details['username']
     });
 });
 
@@ -49,7 +49,7 @@ events.addListener('chat', 'hosted', (details, _) => {
         amount: details['viewers'],
         unit: 'viewers',
         misc: 'autohost: ' + details['autohost'] ? 'true' : 'false',
-        username: details['username'],
+        username: details['username']
     });
 });
 

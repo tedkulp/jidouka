@@ -10,7 +10,7 @@ class App extends Component {
     render() {
         return (
             <ApolloProvider client={apolloClient}>
-                <div className = "App">
+                <div className="App">
                     <Wrapper />
                 </div>
                 <OverlayIndex />
