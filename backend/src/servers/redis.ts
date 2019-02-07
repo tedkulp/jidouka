@@ -1,4 +1,4 @@
-import Promise from 'bluebird';
+import Bluebird from 'bluebird';
 import { delay } from 'lodash';
 import Redis from 'redis';
 
@@ -13,12 +13,12 @@ const client = Redis.createClient({
     port: config.getRedisPort(),
     host: config.getRedisHost()
 }) as IPromisifedRedisClient;
-Promise.promisifyAll(client);
+Bluebird.promisifyAll(client);
 
 log.info('We init redis');
 
 client.getAsyncWhenAvailable = keyName => {
-    const p = Promise.defer();
+    const p = Bluebird.defer();
     const lookup = iKeyName => {
         client.getAsync(iKeyName).then(value => {
             if (!value) {
@@ -31,6 +31,27 @@ client.getAsyncWhenAvailable = keyName => {
     lookup(keyName);
 
     return p.promise;
+};
+
+client.getTimedCount = async (keyName, timeout) => {
+    // Commence anti-pattern...
+    const $d = Bluebird.defer<number>();
+
+    client
+        .multi()
+        .incr(keyName)
+        .expire(keyName, timeout)
+        .exec((err, _) => {
+            if (err) {
+                return $d.reject(err);
+            }
+
+            client.getAsync(keyName).then(res => {
+                return $d.resolve(parseInt(res, 10));
+            });
+        });
+
+    return $d.promise;
 };
 
 export default client;

@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import cachegoose from 'cachegoose';
 
 import logger from './logger';
@@ -22,6 +23,20 @@ export async function getSetting(key, defaultValue?, justValue = true) {
             logger.error(err);
             return defaultValue;
         });
+}
+
+export async function getSettings(keysAndDefaults: object) {
+    return Bluebird.reduce(
+        Object.keys(keysAndDefaults),
+        async (acc, keyName) => {
+            const foundSetting = {
+                [keyName]: await getSetting(keyName, keysAndDefaults[keyName])
+            };
+
+            return { ...acc, ...foundSetting };
+        },
+        {}
+    );
 }
 
 export async function setSetting(key, value) {

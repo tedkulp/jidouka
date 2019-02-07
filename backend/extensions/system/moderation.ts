@@ -1,12 +1,22 @@
-import Bluebird from 'bluebird';
-import { flatten, get } from 'lodash';
+import { get } from 'lodash';
 
 import { client } from '../../src/client';
 import events from '../../src/events';
 import { BlacklistEntryModel } from '../../src/models/blacklistEntry';
-import { IListEntry } from '../../src/models/listEntry';
 import redis from '../../src/servers/redis';
-import { getSetting } from '../../src/settings';
+import { getSettings } from '../../src/settings';
+
+import {
+    findModerationIssues,
+    MAX_BLACKLISTED_WORDS_COUNT,
+    MAX_CAPS_COUNT,
+    MAX_EMOTE_COUNT,
+    MAX_LENGTH,
+    MAX_URL_COUNT,
+    MAX_WARNING_THRESHOLD,
+    MAX_WARNING_TIMEOUT,
+    MODERATION_TRIGGER_LENGTH,
+} from './moderationUtils';
 
 /*
     Example message:
@@ -33,158 +43,12 @@ import { getSetting } from '../../src/settings';
     -012345678901234567890123456
 */
 
-// TODO: Make this configurable
-export const MODERATION_TRIGGER_LENGTH = 15;
-export const MAX_EMOTE_COUNT = 15;
-export const MAX_LENGTH = 300;
-export const MAX_URL_COUNT = 0;
-export const MAX_CAPS_COUNT = 15;
-export const MAX_BLACKLISTED_WORDS_COUNT = 0;
-export const MAX_WARNING_THRESHOLD = 3;
-export const MAX_WARNING_TIMEOUT = 10 * 60;
-
-// From: https://gist.github.com/dperini/729294
-export const URL_REGEX = /(?:(?:(?:https?|ftp):)?\/\/)(?:\S+(?::\S*)?@)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z0-9\u00a1-\uffff][a-z0-9\u00a1-\uffff_-]{0,62})?[a-z0-9\u00a1-\uffff]\.)+(?:[a-z\u00a1-\uffff]{2,}\.?))(?::\d{2,5})?(?:[/?#]\S*)?/gi;
-
-export const countEmotes = (_, userstate) => {
-    return ((userstate['emotes-raw'] && userstate['emotes-raw'].match(/\-/g)) || []).length;
-};
-
-const checkEmotes = async (msg, userstate) => {
-    return (
-        countEmotes(msg, userstate) <=
-        (await getSetting('moderation.maxEmoteCount', MAX_EMOTE_COUNT))
-    );
-};
-
-export const countLength = (msg, _) => {
-    return msg.trim().length;
-};
-
-const checkLength = async (msg, userstate) => {
-    return (
-        countLength(msg, userstate) <= (await getSetting('moderation.maxMessageLength', MAX_LENGTH))
-    );
-};
-
-export const countUrls = (msg, _) => {
-    return get(msg.match(URL_REGEX), 'length', 0);
-};
-
-const checkUrls = async (msg, userstate) => {
-    return countUrls(msg, userstate) <= (await getSetting('moderation.maxUrlCount', MAX_URL_COUNT));
-};
-
-export const countCaps = (msg, _) => {
-    // Do this instead of regex so that we're taking Unicode stuff into account
-    return [...msg].filter(c => c === c.toUpperCase()).length;
-};
-
-const checkCaps = async (msg, userstate) => {
-    return (
-        countCaps(msg, userstate) <= (await getSetting('moderation.maxCapsCount', MAX_CAPS_COUNT))
-    );
-};
-
-export const countBlacklistedWords = (msg, _, blacklistedWords: IListEntry[] = []) => {
-    const matches = blacklistedWords
-        .map(e => {
-            return msg.match(e.entryText);
-        })
-        .filter(e => !!e);
-
-    return flatten(matches).length;
-};
-
-const checkBlacklistedWords = async (msg, userstate, options?) => {
-    const blacklistedWords = (options && options.blacklistEntries) || [];
-    return (
-        countBlacklistedWords(msg, userstate, blacklistedWords) <=
-        (await getSetting('moderation.maxBlacklistedWordsCount', MAX_BLACKLISTED_WORDS_COUNT))
-    );
-};
-
 const getBlacklistedEntries = async () => {
     const finder = BlacklistEntryModel.find({
-        active: true
+        active: true,
     }) as any;
 
     return finder.cache(15 * 60);
-};
-
-const rules = {
-    emotes: {
-        description: 'Too many emotes',
-        useTriggerLength: false,
-        detectFn: checkEmotes
-    },
-    blacklist: {
-        description: 'Blacklisted word(s)',
-        useTriggerLength: false,
-        detectFn: checkBlacklistedWords
-    },
-    urls: {
-        description: 'URL(s)',
-        useTriggerLength: false,
-        detectFn: checkUrls
-    },
-    length: {
-        description: 'Message too long',
-        useTriggerLength: false,
-        detectFn: checkLength
-    },
-    caps: {
-        description: 'Too many caps',
-        useTriggerLength: true,
-        detectFn: checkCaps
-    }
-};
-
-export const findModerationIssues = async (message, userstate, options?) => {
-    if (!message || !message.trim) {
-        return [];
-    }
-
-    const triggerLength = await getSetting('moderation.triggerLength', MODERATION_TRIGGER_LENGTH);
-
-    message = message.trim();
-
-    const brokenRules = await Promise.all(
-        Object.keys(rules).map(async ruleKeyName => {
-            const rule = rules[ruleKeyName];
-            if (!rule.useTriggerLength || (message && message.length > triggerLength)) {
-                const result = await rule.detectFn.call(rule, message, userstate, options);
-                if (!result) {
-                    return rule.description;
-                }
-            }
-        })
-    );
-
-    return brokenRules.filter(e => !!e);
-};
-
-const getCurrentWarningThreshold = async userId => {
-    // Commence anti-pattern...
-    const $d = Bluebird.defer<number>();
-
-    const redisKeyName = `warning_threshold:${userId}`;
-
-    redis
-        .multi()
-        .incr(redisKeyName)
-        .expire(redisKeyName, MAX_WARNING_TIMEOUT)
-        .exec((err, _) => {
-            if (err) {
-                return $d.reject(err);
-            }
-
-            redis.getAsync(redisKeyName).then(res => {
-                return $d.resolve(parseInt(res, 10));
-            });
-        });
-
-    return $d.promise;
 };
 
 const incomingMessage = async (details, _) => {
@@ -199,13 +63,26 @@ const incomingMessage = async (details, _) => {
     }
 
     const blacklistEntries = await getBlacklistedEntries();
-    const issues = await findModerationIssues(details.message, details.userstate, {
-        blacklistEntries
+    const settings = await getSettings({
+        'moderation.maxBlacklistedWordsCount': MAX_BLACKLISTED_WORDS_COUNT,
+        'moderation.maxCapsCount': MAX_CAPS_COUNT,
+        'moderation.maxEmoteCount': MAX_EMOTE_COUNT,
+        'moderation.maxMessageLength': MAX_LENGTH,
+        'moderation.maxUrlCount': MAX_URL_COUNT,
+        'moderation.maxWarningThreshold': MAX_WARNING_THRESHOLD,
+        'moderation.triggerLength': MODERATION_TRIGGER_LENGTH,
+    });
+    const issues = findModerationIssues(details.message, details.userstate, settings, {
+        blacklistEntries,
     });
 
     if (issues.length) {
-        const warningThreshold = await getCurrentWarningThreshold(details.userstate['user-id']);
-        const maxNum = await getSetting('moderation.maxWarningThreshold', MAX_WARNING_THRESHOLD);
+        const userId = details.userstate['user-id'];
+        const warningThreshold = await redis.getTimedCount(
+            `warning_threshold:${userId}`,
+            MAX_WARNING_TIMEOUT
+        );
+        const maxNum = settings['moderation.maxWarningThreshold'] || MAX_WARNING_THRESHOLD;
 
         // console.log('warningThreshold', warningThreshold, 'maxNum', maxNum);
 
