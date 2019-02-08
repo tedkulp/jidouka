@@ -1,10 +1,10 @@
 import { get } from 'lodash';
 
-import { client } from '../../src/client';
-import events from '../../src/events';
-import { BlacklistEntryModel } from '../../src/models/blacklistEntry';
-import redis from '../../src/servers/redis';
-import { getSettings } from '../../src/settings';
+import { client } from '../../../src/client';
+import events from '../../../src/events';
+import { BlacklistEntryModel } from '../../../src/models/blacklistEntry';
+import redis from '../../../src/servers/redis';
+import { getSettings } from '../../../src/settings';
 
 import {
     findModerationIssues,
@@ -16,7 +16,7 @@ import {
     MAX_WARNING_THRESHOLD,
     MAX_WARNING_TIMEOUT,
     MODERATION_TRIGGER_LENGTH,
-} from './moderationUtils';
+} from './utils';
 
 /*
     Example message:

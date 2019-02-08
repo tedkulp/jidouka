@@ -3,12 +3,8 @@ import { chunk } from 'lodash';
 import loremIpsum from 'lorem-ipsum';
 import 'mocha';
 
-import {
-    countBlacklistedWords,
-    countEmotes,
-    findModerationIssues,
-} from '../../extensions/system/moderationUtils';
-import { IListEntry } from '../../src/models/listEntry';
+import { IListEntry } from '../../../../src/models/listEntry';
+import { countBlacklistedWords, countEmotes, findModerationIssues } from '../utils';
 
 describe('moderation', () => {
     // emotes: {randId: [0, 3, 6, 15], anotherId: ...} // some id, start and end pos

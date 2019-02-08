@@ -1,7 +1,7 @@
 import * as _ from 'lodash';
 import mongoose from 'mongoose';
 
-import CommandManager from '../../src/commands';
+import CommandManager from '../../../src/commands';
 
 // tslint:disable:variable-name
 
@@ -19,11 +19,11 @@ export const CustomCommandSchema: mongoose.Schema = new mongoose.Schema(
     {
         commandName: { type: String, required: true },
         message: { type: String, required: true },
-        timesRun: { type: Number, required: true, default: 0 }
+        timesRun: { type: Number, required: true, default: 0 },
     },
     {
         timestamps: true,
-        collection: 'customCommands'
+        collection: 'customCommands',
     }
 );
 
@@ -55,7 +55,7 @@ export function graphQLConfig() {
         `,
         resolvers: {
             Query: {
-                customCommands: async (_i, args) => CustomCommandModel.find(args)
+                customCommands: async (_i, args) => CustomCommandModel.find(args),
             },
             Mutation: {
                 addCustomCommand: async (_root, args) => {
@@ -85,9 +85,9 @@ export function graphQLConfig() {
                                 return true;
                             });
                         });
-                }
-            }
-        }
+                },
+            },
+        },
     };
 }
 
@@ -100,8 +100,8 @@ function registerCommands() {
                 return cmd
                     .update({
                         $inc: {
-                            timesRun: 1
-                        }
+                            timesRun: 1,
+                        },
                     })
                     .exec()
                     .then(() => {

@@ -2,11 +2,11 @@ import { get } from 'lodash';
 import moment from 'moment';
 import momentDurationFormatSetup from 'moment-duration-format';
 
-import api from '../../src/api';
-import commands, { ResponseList } from '../../src/commands';
-import logger from '../../src/logger';
-import { UserModel } from '../../src/models/user';
-import redis from '../../src/servers/redis';
+import api from '../../../src/api';
+import commands, { ResponseList } from '../../../src/commands';
+import logger from '../../../src/logger';
+import { UserModel } from '../../../src/models/user';
+import redis from '../../../src/servers/redis';
 
 momentDurationFormatSetup(moment);
 
@@ -103,7 +103,7 @@ commands.register(
 
         const mapped = names.map(async n => {
             const foundUser = await UserModel.findOne({
-                username: n
+                username: n,
             });
             return `Last seen ${n} at ${moment(foundUser.updatedAt).format(
                 'ddd, MMM D YYYY, h:mm a'
@@ -144,7 +144,7 @@ commands.register(
 
         const mapped = names.map(async n => {
             const foundUser = await UserModel.findOne({
-                username: n
+                username: n,
             });
             return `${n} has watched the stream for ${formatSeconds(
                 get(foundUser, 'watchedTime', 0)
@@ -161,7 +161,7 @@ commands.register(
 
         const mapped = names.map(async n => {
             const foundUser = await UserModel.findOne({
-                username: n
+                username: n,
             });
             return `${n} has sent ${get(foundUser, 'numMessages', 0)} total messages.`;
         });
