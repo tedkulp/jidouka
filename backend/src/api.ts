@@ -161,8 +161,8 @@ export const getStreamData = async () => {
     const response = await makeHelixRequest({
         url: '/streams',
         params: {
-            // user_login: config.getStreamerName(),
-            user_login: 'relaxbeats',
+            user_login: config.getStreamerName(),
+            // user_login: 'relaxbeats',
         },
     });
 
