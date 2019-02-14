@@ -17,8 +17,8 @@ const helixApi = axios.create({
     baseURL: 'https://api.twitch.tv/helix/',
     headers: {
         'Client-ID': CLIENT_ID,
-        'Content-type': 'application/json'
-    }
+        'Content-type': 'application/json',
+    },
 });
 
 events.register('webhook', 'follow', 'User followed the channel');
@@ -28,7 +28,7 @@ events.register('webhook', 'offline', 'Channel has gone offline');
 const getTopicUrls = userId => {
     return {
         online: `https://api.twitch.tv/helix/streams?user_id=${userId}`,
-        follow: `https://api.twitch.tv/helix/users/follows?first=1&to_id=${userId}`
+        follow: `https://api.twitch.tv/helix/users/follows?first=1&to_id=${userId}`,
     };
 };
 
@@ -82,25 +82,25 @@ const webhookPost = async (req: Request, res: Response) => {
     } else {
         logger.error(['failed', body]);
         res.status(400).json({
-            error: 'ERROR: Invalid request!'
+            error: 'ERROR: Invalid request!',
         });
     }
 };
 
 const subscribe = async () => {
-    console.log('in subscribe');
+    logger.debug('in subscribe');
     const userId = await api.getUserId(USERNAME);
     const topicUrls = getTopicUrls(userId);
 
     _.values(topicUrls).forEach(async url => {
         try {
-            console.log('Subbing: ' + url);
+            logger.info('Subbing webhook: ' + url);
             await helixApi.post('webhooks/hub', {
                 'hub.mode': 'subscribe',
                 'hub.callback': `${URL_BASE}/webhooks`,
                 'hub.topic': url,
                 'hub.lease_seconds': 864000,
-                'hub.secret': SECRET
+                'hub.secret': SECRET,
             });
         } catch (e) {
             logger.error(['error subbing', e.response]);
@@ -109,19 +109,19 @@ const subscribe = async () => {
 };
 
 const unsubscribe = async () => {
-    console.log('in unsubscribe');
+    logger.debug('in unsubscribe');
     const userId = await api.getUserId(USERNAME);
     const topicUrls = getTopicUrls(userId);
 
     _.values(topicUrls).forEach(async url => {
         try {
-            console.log('Unsubbing: ' + url);
+            logger.info('Unsubbing webhook: ' + url);
             await helixApi.post('webhooks/hub', {
                 'hub.mode': 'unsubscribe',
                 'hub.callback': `${URL_BASE}/webhooks`,
                 'hub.topic': url,
                 'hub.lease_seconds': 864000,
-                'hub.secret': SECRET
+                'hub.secret': SECRET,
             });
         } catch (e) {
             logger.error(['error unsubbing', e.response]);
@@ -143,5 +143,5 @@ const init = async app => {
 export default {
     subscribe,
     unsubscribe,
-    init
+    init,
 };

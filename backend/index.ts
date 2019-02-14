@@ -11,6 +11,7 @@ import extensions from './src/extensions';
 import io from './src/io';
 import logger from './src/logger';
 import { init as oauthInit } from './src/oauth';
+import { init as watcherInit } from './src/watchers';
 import { getServer } from './src/schema';
 import state from './src/state';
 import webhooks from './src/webhooks';
@@ -61,6 +62,7 @@ process.on('SIGUSR2', shutdown);
     oauthInit();
     commands.init();
     state.init();
+    watcherInit();
     await extensions.init(); // Extensions before apollo, so that we can define schemas
     getServer().applyMiddleware({ app });
 

@@ -6,7 +6,6 @@ import config from './config';
 import events from './events';
 import logger from './logger';
 import redis from './servers/redis';
-import watchers from './watchers';
 
 events.register('chat', 'join', 'User joined channel');
 events.register('chat', 'part', 'User parted channel');
@@ -50,19 +49,18 @@ export async function getClient() {
     const clientConfig = {
         options: {
             debug: _.includes(['debug', 'verbose', 'silly'], config.getLogLevel()),
-            clientId: config.getClientId()
+            clientId: config.getClientId(),
         },
         connection: {
-            reconnect: false
+            reconnect: false,
         },
         identity: {
             username: await redis.getAsyncWhenAvailable('bot:username'),
-            password: 'oauth:' + (await redis.getAsyncWhenAvailable('bot:oauth:access_token'))
+            password: 'oauth:' + (await redis.getAsyncWhenAvailable('bot:oauth:access_token')),
         },
-        channels: [`#${await redis.getAsyncWhenAvailable('streamer:username')}`]
+        channels: [`#${await redis.getAsyncWhenAvailable('streamer:username')}`],
     };
 
-    // console.log('clientConfig', clientConfig);
     client = new tmi.client(clientConfig);
 
     const channelClean = str => {
@@ -96,34 +94,29 @@ export async function getClient() {
     });
 
     client.on('join', (channel, username, self) => {
-        console.log('join', channel, username);
-        watchers.addWatcher(channel, username);
+        logger.info('join', channel, username);
         events.trigger('chat', 'join', {
             channel,
             username,
-            self
+            self,
         });
-        // console.log(watchers.getWatchers(channel));
     });
 
     client.on('part', (channel, username, self) => {
-        // console.log('part', channel, username);
-        watchers.removeWatcher(channel, username);
+        logger.info('part', channel, username);
         events.trigger('chat', 'part', {
             channel,
             username,
-            self
+            self,
         });
-        // console.log(watchers.getWatchers(channel));
     });
 
     client.on('names', (channel, usernames) => {
         logger.info('names', channel, usernames);
-        _.each(usernames, username => {
-            watchers.addWatcher(channel, username);
-            // TODO: Send event?
+        events.trigger('chat', 'names', {
+            channel,
+            usernames,
         });
-        // console.log(watchers.getWatchers(channel));
     });
 
     client.on('roomstate', (channel, state) => {
@@ -132,25 +125,25 @@ export async function getClient() {
     });
 
     client.on('subscription', (channel, username, method, message, userstate) => {
-        console.log('subscription', channel, username, method, message, userstate);
+        logger.info('subscription', channel, username, method, message, userstate);
         events.trigger('chat', 'sub', {
             channel,
             username,
             method,
             message,
-            userstate
+            userstate,
         });
     });
 
     client.on('resub', (channel, username, months, message, userstate, methods) => {
-        console.log('resub', channel, username, months, message, userstate, methods);
+        logger.info('resub', channel, username, months, message, userstate, methods);
         events.trigger('chat', 'resub', {
             channel,
             username,
             months,
             message,
             userstate,
-            methods
+            methods,
         });
     });
 
@@ -158,33 +151,28 @@ export async function getClient() {
         logger.info('notice', channel, msgid, message);
     });
 
-    client.on('mods', (channel, mods) => {
-        logger.info('mods event', channel, mods);
-        _.each(mods, username => {
-            watchers.addMod(channel, username);
-            // TODO: Add event?
+    client.on('mods', (channel, usernames) => {
+        logger.info('mods event', channel, usernames);
+        events.trigger('chat', 'mods', {
+            channel,
+            usernames,
         });
-        // console.log(watchers.getMods(channel));
     });
 
     client.on('mod', (channel, username) => {
-        console.log('mod', channel, username);
-        watchers.addMod(channel, username);
+        logger.info('mod', channel, username);
         events.trigger('chat', 'mod', {
             channel,
-            username
+            username,
         });
-        // console.log(watchers.getMods(channel));
     });
 
     client.on('unmod', (channel, username) => {
-        // console.log('unmod', channel, username);
-        watchers.removeMod(channel, username);
+        logger.info('unmod', channel, username);
         events.trigger('chat', 'unmod', {
             channel,
-            username
+            username,
         });
-        // console.log(watchers.getMods(channel));
     });
 
     client.on('message', (channel, userstate, message, self) => {
@@ -192,29 +180,29 @@ export async function getClient() {
     });
 
     client.on('hosted', (channel, username, viewers, autohost) => {
-        // console.log('hosted', channel, username, viewers, autohost);
+        logger.info('hosted', channel, username, viewers, autohost);
         events.trigger('chat', 'hosted', {
             channel,
             username,
             viewers,
-            autohost
+            autohost,
         });
     });
 
     client.on('hosting', (channel, target, viewers) => {
-        logger.info('hosting', channel, target, viewers);
+        logger.info('hosting', 'channel', channel, 'target', target, '# viewers', viewers);
     });
 
     client.on('unhost', (channel, viewers) => {
-        logger.info('unhost', channel, viewers);
+        logger.info('unhost', 'channel', channel, '# viewers', viewers);
     });
 
     client.on('cheer', (channel, userstate, message) => {
-        // console.log('cheer', channel, userstate, message);
+        logger.info('cheer', channel, userstate, message);
         events.trigger('chat', 'cheer', {
             channel,
             userstate,
-            message
+            message,
         });
     });
 
@@ -224,32 +212,31 @@ export async function getClient() {
             return;
         }
 
-        console.log(channel, util.inspect(userstate), message, self);
+        logger.debug(channel, util.inspect(userstate), message, self);
 
-        // console.log('chat', channel, userstate, message, self);
         events.trigger('chat', 'message', {
             channel,
             userstate,
-            message
+            message,
         });
     });
 
     client.on('ban', (channel, username, reason) => {
-        // console.log('ban', channel, username, reason);
+        logger.info('ban', channel, username, reason);
         events.trigger('chat', 'ban', {
             channel,
             username,
-            reason
+            reason,
         });
     });
 
     client.on('timeout', (channel, username, reason, duration) => {
-        // console.log('timeout', channel, username, reason, duration);
+        logger.info('timeout', channel, username, reason, duration);
         events.trigger('chat', 'timeout', {
             channel,
             username,
             reason,
-            duration
+            duration,
         });
     });
 

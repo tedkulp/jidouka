@@ -13,37 +13,37 @@ const axiosCache = setup({
     cache: {
         maxAge: 5 * 1000,
         exclude: { query: false },
-        key: req => req.url + JSON.stringify(req.params)
-    }
+        key: req => req.url + JSON.stringify(req.params),
+    },
 }) as AxiosInstance;
 
 const axiosMediumCache = setup({
     cache: {
         maxAge: 60 * 1000,
         exclude: { query: false },
-        key: req => req.url + JSON.stringify(req.params)
-    }
+        key: req => req.url + JSON.stringify(req.params),
+    },
 }) as AxiosInstance;
 
 const axiosLongCache = setup({
     cache: {
         exclude: { query: false },
-        key: req => req.url + JSON.stringify(req.params)
-    }
+        key: req => req.url + JSON.stringify(req.params),
+    },
 }) as AxiosInstance;
 
 export enum RequestAuthType {
     NONE = 'NONE',
     CLIENT = 'CLIENT',
     BOT_OAUTH = 'BOT_OAUTH',
-    STREAMER_OAUTH = 'STREAMER_OAUTH'
+    STREAMER_OAUTH = 'STREAMER_OAUTH',
 }
 
 export enum RequestCacheType {
     NONE = 'NONE',
     SHORT = 'SHORT',
     MEDIUM = 'MEDIUM',
-    LONG = 'LONG'
+    LONG = 'LONG',
 }
 
 export const makeHelixRequest = async (
@@ -55,7 +55,7 @@ export const makeHelixRequest = async (
         {},
         {
             baseURL: 'https://api.twitch.tv/helix',
-            headers: {}
+            headers: {},
         },
         requestConfig
     );
@@ -103,7 +103,7 @@ export const makeKrakenRequest = async (
         {},
         {
             baseURL: 'https://api.twitch.tv/kraken',
-            headers: {}
+            headers: {},
         },
         requestConfig
     );
@@ -161,8 +161,9 @@ export const getStreamData = async () => {
     const response = await makeHelixRequest({
         url: '/streams',
         params: {
-            user_login: config.getStreamerName()
-        }
+            // user_login: config.getStreamerName(),
+            user_login: 'relaxbeats',
+        },
     });
 
     return get(response, 'data.data[0]', {});
@@ -170,7 +171,7 @@ export const getStreamData = async () => {
 
 export const getUserDetails = async (username?: string) => {
     const foundUser = await UserModel.findOne({
-        username
+        username,
     });
 
     if (foundUser) {
@@ -190,7 +191,7 @@ export const getUserDetails = async (username?: string) => {
                 displayName: apiUser['display_name'],
                 watchedTime: 0,
                 numMessages: 0,
-                followDate: followDate && moment(followDate).toDate() // Normalize date
+                followDate: followDate && moment(followDate).toDate(), // Normalize date
             };
 
             let p;
@@ -216,8 +217,8 @@ export const getUserDetailsFromApi = async (username?: string) => {
     const response = await makeHelixRequest({
         url: '/users',
         params: {
-            login: username || config.getStreamerName()
-        }
+            login: username || config.getStreamerName(),
+        },
     });
 
     return get(response, 'data.data[0]', null);
@@ -228,8 +229,8 @@ export const getUserDetailsFromToken = async (token: string) => {
         {
             url: '/users',
             headers: {
-                Authorization: `Bearer ${token}`
-            }
+                Authorization: `Bearer ${token}`,
+            },
         },
         RequestAuthType.NONE
     );
@@ -251,8 +252,8 @@ const getFollowTime = async (fromId: number) => {
         url: '/users/follows',
         params: {
             from_id: fromId.toString(),
-            to_id: await redis.getAsync('streamer:twitch_id')
-        }
+            to_id: await redis.getAsync('streamer:twitch_id'),
+        },
     });
 
     return get(response, 'data.0.followed_at', null);
@@ -266,8 +267,8 @@ const getStreamerFollowsData = async () => {
     const response = await makeHelixRequest({
         url: '/users/follows',
         params: {
-            to_id: await redis.getAsync('streamer:twitch_id')
-        }
+            to_id: await redis.getAsync('streamer:twitch_id'),
+        },
     });
 
     return get(response, 'data', null);
@@ -283,8 +284,8 @@ export const getGameInfo = async gameId => {
         {
             url: '/games',
             params: {
-                id: gameId
-            }
+                id: gameId,
+            },
         },
         RequestAuthType.CLIENT,
         RequestCacheType.LONG
@@ -297,7 +298,7 @@ export const getSubCount = async () => {
     const userId = await redis.getAsync('streamer:twitch_id');
     const response = await makeKrakenRequest(
         {
-            url: `/channels/${userId}/subscriptions`
+            url: `/channels/${userId}/subscriptions`,
         },
         RequestAuthType.STREAMER_OAUTH,
         RequestCacheType.MEDIUM
@@ -314,7 +315,7 @@ export const getAccountCreateDate = async userId => {
     try {
         response = await makeKrakenRequest(
             {
-                url: `/users/${userId}`
+                url: `/users/${userId}`,
             },
             RequestAuthType.CLIENT,
             RequestCacheType.LONG
@@ -338,5 +339,5 @@ export default {
     getStreamerFollowCount,
     isFollowingStreamer,
     getGameInfo,
-    getAccountCreateDate
+    getAccountCreateDate,
 };

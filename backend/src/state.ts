@@ -75,7 +75,7 @@ class State {
             if (!isEmpty(gameTitle)) {
                 logger.debug('Trigger changegame event');
                 events.trigger('status', 'changegame', {
-                    title: gameTitle
+                    title: gameTitle,
                 });
             }
         }
@@ -123,7 +123,7 @@ class State {
         const limits: IApiLimitValues = {
             limit,
             remaining,
-            refresh: moment.unix(refresh)
+            refresh: moment.unix(refresh),
         };
 
         this.apiLimits[type] = limits;
@@ -139,7 +139,7 @@ class State {
             title: this.title,
             gameId: this.gameId,
             gameTitle: this.gameTitle,
-            language: this.language
+            language: this.language,
         };
     }
 }

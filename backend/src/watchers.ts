@@ -2,6 +2,7 @@ import { hash, Map, Set } from 'immutable';
 import _ from 'lodash';
 import moment from 'moment';
 import { setTimeout } from 'timers';
+import Bluebird from 'bluebird';
 
 import api from './api';
 import config from './config';
@@ -16,6 +17,14 @@ let timeouts: Map<symbol, NodeJS.Timeout> = Map();
 const WATCH_TIMEOUT_TIME = 60 * 1000;
 const WATCH_TIMEOUT_KEY = Symbol('watchTime');
 
+const debugOutput = channel => {
+    logger.silly('watchers', watchers.get(channel).map(w => `${w.username}(${w.mod})`));
+};
+
+const setTimeouts = () => {
+    timeouts = timeouts.set(WATCH_TIMEOUT_KEY, setTimeout(updateWatchedTime, WATCH_TIMEOUT_TIME));
+};
+
 export class Watcher {
     public id?: number;
     public username: string;
@@ -27,11 +36,16 @@ export class Watcher {
         this.username = username;
         this.mod = isMod;
         this.startTime = moment();
-        this.lastReconciliationTime = moment();
+        this.resetReconciliationTime();
 
         if (id) {
             this.id = id;
         }
+    }
+
+    public resetReconciliationTime() {
+        this.lastReconciliationTime = moment();
+        return this;
     }
 
     public equals(v: Watcher): boolean {
@@ -43,7 +57,7 @@ export class Watcher {
     }
 }
 
-const addWatcher = async (channel: string, username: string, isMod: boolean = false) => {
+export const addWatcher = async (channel: string, username: string, isMod: boolean = false) => {
     // console.log('addWatcher', channel, username, isMod);
 
     if (!watchers.has(channel)) {
@@ -63,10 +77,10 @@ const addWatcher = async (channel: string, username: string, isMod: boolean = fa
 
     watcher.id = await api.getUserId(username);
 
-    logger.debug('watchers', watchers.get(channel).map(w => `${w.username}(${w.mod})`));
+    debugOutput(channel);
 };
 
-const removeWatcher = (channel: string, username: string): void => {
+export const removeWatcher = (channel: string, username: string): void => {
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
         return;
@@ -79,10 +93,10 @@ const removeWatcher = (channel: string, username: string): void => {
         watchers = watchers.set(channel, watchers.get(channel).remove(user));
     }
 
-    // logger.debug(watchers.get(channel).toJSON());
+    debugOutput(channel);
 };
 
-const getWatchers = (channel: string): Watcher[] => {
+export const getWatchers = (channel: string): Watcher[] => {
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
     }
@@ -90,7 +104,7 @@ const getWatchers = (channel: string): Watcher[] => {
     return watchers.get(channel).toArray();
 };
 
-const addMod = async (channel: string, username: string) => {
+export const addMod = async (channel: string, username: string) => {
     // console.log('addMod', channel, username);
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
@@ -103,10 +117,10 @@ const addMod = async (channel: string, username: string) => {
         await addWatcher(channel, username, true);
     }
 
-    // logger.debug(watchers.get(channel).toJSON());
+    debugOutput(channel);
 };
 
-const removeMod = (channel: string, username: string): void => {
+export const removeMod = (channel: string, username: string): void => {
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
     }
@@ -116,10 +130,10 @@ const removeMod = (channel: string, username: string): void => {
         user.mod = false;
     }
 
-    // logger.debug(watchers.get(channel).toJSON());
+    debugOutput(channel);
 };
 
-const getMods = (channel: string): Watcher[] => {
+export const getMods = (channel: string): Watcher[] => {
     if (!watchers.has(channel)) {
         watchers = watchers.set(channel, Set());
     }
@@ -130,35 +144,38 @@ const getMods = (channel: string): Watcher[] => {
         .toArray();
 };
 
-const updateWatchedTime = async (noOnlineCheck: boolean = false, resetTimeout: boolean = true) => {
+const writeUptimes = async () => {
+    return Bluebird.map(watchers.toIndexedSeq().toArray(), channel => {
+        return Bluebird.map(channel.toArray(), watcher => {
+            logger.silly('updating time', watcher.username);
+            const timeToUpdate = moment().diff(watcher.lastReconciliationTime);
+            watcher.resetReconciliationTime();
+
+            return UserModel.updateOne(
+                {
+                    username: watcher.username,
+                },
+                {
+                    $inc: {
+                        watchedTime: Math.round(timeToUpdate / 1000),
+                    },
+                }
+            ).exec();
+        });
+    });
+};
+
+export const updateWatchedTime = async () => {
     logger.silly('updateWatchedTime');
 
-    if (state.isOnline() || noOnlineCheck) {
-        watchers.forEach(channel => {
-            channel.forEach(watcher => {
-                const timeToUpdate = moment().diff(watcher.lastReconciliationTime);
-                watcher.lastReconciliationTime = moment();
-
-                UserModel.updateOne(
-                    {
-                        username: watcher.username
-                    },
-                    {
-                        $inc: {
-                            watchedTime: Math.round(timeToUpdate / 1000)
-                        }
-                    }
-                ).exec();
-            });
-        });
+    if (state.isOnline()) {
+        logger.silly("We're online");
+        await writeUptimes();
+    } else {
+        logger.silly("We're not updating the times for people");
     }
 
-    if (resetTimeout) {
-        timeouts = timeouts.set(
-            WATCH_TIMEOUT_KEY,
-            setTimeout(updateWatchedTime, WATCH_TIMEOUT_TIME)
-        );
-    }
+    setTimeouts();
 };
 
 const updateMessageCount = userstate => {
@@ -166,45 +183,89 @@ const updateMessageCount = userstate => {
 
     UserModel.updateOne(
         {
-            username: userstate.username
+            username: userstate.username,
         },
         {
             $inc: {
-                numMessages: 1
-            }
+                numMessages: 1,
+            },
         }
     ).exec();
 };
 
-timeouts = timeouts.set(WATCH_TIMEOUT_KEY, setTimeout(updateWatchedTime, WATCH_TIMEOUT_TIME));
-
 const resetReconciliationTime = channel => {
     const found = watchers.find((_v, k) => k === channel);
     if (found) {
-        found.forEach(u => (u.lastReconciliationTime = moment()));
+        found.forEach(u => u.resetReconciliationTime());
     }
 };
 
-events.addListener('webhook', 'offline', data => {
-    logger.debug('webhook.offline', data);
+export const init = (initTimouts = true) => {
+    if (initTimouts) {
+        setTimeouts();
+    }
 
-    // TODO: Do we need multiple channels?
+    events.addListener('webhook', 'offline', data => {
+        logger.debug('webhook.offline', data);
 
-    // Dump all the current times out to the database
-    // and make sure don't track anymore
-    updateWatchedTime(true, false);
-    resetReconciliationTime(config.getStreamerName());
-});
+        // TODO: Do we need multiple channels?
 
-events.addListener('webhook', 'online', data => {
-    logger.debug('webhook.online', data);
+        // Dump all the current times out to the database
+        // and make sure don't track anymore
+        // updateWatchedTime(false, false);
+        writeUptimes().then(() => {
+            return resetReconciliationTime(config.getStreamerName());
+        });
+    });
 
-    resetReconciliationTime(config.getStreamerName());
-});
+    events.addListener('webhook', 'online', data => {
+        logger.debug('webhook.online', data);
 
-events.addListener('chat', 'message', (details: object, _msg) => {
-    updateMessageCount(details['userstate']);
-});
+        resetReconciliationTime(config.getStreamerName());
+    });
+
+    events.addListener('chat', 'message', (details: object, _msg) => {
+        updateMessageCount(details['userstate']);
+    });
+
+    // channel, username, self
+    events.addListener('chat', 'join', (details: object, _msg) => {
+        return addWatcher(details['channel'], details['username']);
+    });
+
+    // channel, username, self
+    events.addListener('chat', 'part', (details: object, _msg) => {
+        return removeWatcher(details['channel'], details['username']);
+    });
+
+    // channel, usernames (as array)
+    events.addListener('chat', 'names', (details: object, _msg) => {
+        _.each(details['usernames'], username => {
+            return addWatcher(details['channel'], username);
+        });
+    });
+
+    // channel, usernames (as array)
+    events.addListener('chat', 'mods', (details: object, _msg) => {
+        _.each(details['usernames'], username => {
+            return addMod(details['channel'], username);
+        });
+    });
+
+    // channel, username
+    events.addListener('chat', 'mod', (details: object, _msg) => {
+        return addMod(details['channel'], details['username']);
+    });
+
+    // channel, username
+    events.addListener('chat', 'unmod', (details: object, _msg) => {
+        return removeMod(details['channel'], details['username']);
+    });
+};
+
+export const clear = () => {
+    watchers = Map();
+};
 
 export default {
     addWatcher,
@@ -212,5 +273,8 @@ export default {
     getWatchers,
     addMod,
     removeMod,
-    getMods
+    getMods,
+    init,
+    clear,
+    updateWatchedTime,
 };
