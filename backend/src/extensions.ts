@@ -8,9 +8,11 @@ class ExtensionManager {
     private _extensions = {};
 
     public async init() {
+        const extDir = path.resolve(__dirname, '../extensions');
+        logger.debug('Extension dir:', extDir);
         const filenames = await filehound
             .create()
-            .path(path.resolve(__dirname, '../extensions'))
+            .path(extDir)
             .glob('module.ts', 'module.js')
             .find();
 
