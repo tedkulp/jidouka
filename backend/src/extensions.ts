@@ -13,7 +13,7 @@ class ExtensionManager {
         const filenames = await filehound
             .create()
             .path(extDir)
-            .glob('module.ts', 'module.js')
+            .glob('module.[t|j]s')
             .find();
 
         filenames.forEach(f => {
