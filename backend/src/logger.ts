@@ -22,15 +22,15 @@ const logger = createLogger({
         format.colorize(),
         format.printf(info => {
             if (info[SPLAT] && info[SPLAT].length > 0) {
-                const splat = _.clone(info[SPLAT]);
+                const splat = JSON.parse(JSON.stringify(info[SPLAT]));
                 const msg = [info.message, ...splat].map(i => util.inspect(i)).join(' ');
-                return `1 - [${info.timestamp}] ${info.level}: ${msg}`;
+                return `[${info.timestamp}] ${info.level}: ${msg}`;
             } else if (info.meta && info.meta.length > 0) {
-                const meta = _.clone(info.meta);
-                const msg = [info.message, ...info.meta].map(i => util.inspect(i)).join(' ');
-                return `2 - [${info.timestamp}] ${info.level}: ${msg}`;
+                const meta = JSON.parse(JSON.stringify(info.meta));
+                const msg = [info.message, ...meta].map(i => util.inspect(i)).join(' ');
+                return `[${info.timestamp}] ${info.level}: ${msg}`;
             } else {
-                return `3 - [${info.timestamp}] ${info.level}: ${util.inspect(info.message)}`;
+                return `[${info.timestamp}] ${info.level}: ${util.inspect(info.message)}`;
             }
         })
     ),
