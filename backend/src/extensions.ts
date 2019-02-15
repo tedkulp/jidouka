@@ -1,6 +1,7 @@
 import filehound from 'filehound';
 import { get, isFunction } from 'lodash';
 import path from 'path';
+import logger from './logger';
 
 class ExtensionManager {
     private _hasInit = false;
@@ -14,7 +15,9 @@ class ExtensionManager {
             .find();
 
         filenames.forEach(f => {
-            this._extensions[f] = require(f);
+            const extName = path.basename(path.dirname(f));
+            logger.info('Loading extension:', extName);
+            this._extensions[extName] = require(f);
         });
 
         this._hasInit = true;
