@@ -1,36 +1,46 @@
 import * as React from 'react';
-import { Query } from "react-apollo";
-import gql from "graphql-tag";
+import { Query } from 'react-apollo';
+import gql from 'graphql-tag';
 import { withStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
-import { Table, TableHead, TableBody, TableRow, TableCell, Paper, createStyles } from '@material-ui/core';
+import {
+    Table,
+    TableHead,
+    TableBody,
+    TableRow,
+    TableCell,
+    Paper,
+    createStyles,
+} from '@material-ui/core';
 
 const GET_USERS = gql`
-{
-    users {
-        twitchId
-        username
-        watchedTime
-        createdAt
+    {
+        users {
+            twitchId
+            username
+            watchedTime
+            createdAt
+        }
     }
-}`;
+`;
 
-const styles = ({ palette, spacing }) => createStyles({
-    root: {
-        width: '100%',
-        overflowX: 'auto',
-    },
-    tableContainer: {
-        minWidth: 700,
-    },
-});
+const styles = ({ palette, spacing }) =>
+    createStyles({
+        root: {
+            width: '100%',
+            overflowX: 'auto',
+        },
+        tableContainer: {
+            minWidth: 700,
+        },
+    });
 
-const formatSeconds = (totalSeconds) => {
+const formatSeconds = totalSeconds => {
     let result = '';
 
     const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds - (hours * 3600)) / 60);
-    const seconds = totalSeconds - (hours * 3600) - (minutes * 60);
+    const minutes = Math.floor((totalSeconds - hours * 3600) / 60);
+    const seconds = totalSeconds - hours * 3600 - minutes * 60;
 
     if (hours > 0) {
         result = result + `${hours}h `;
@@ -43,9 +53,9 @@ const formatSeconds = (totalSeconds) => {
     result = result + `${seconds}s`;
 
     return result;
-}
+};
 
-const UserList = (props) => {
+const UserList = props => {
     const { classes } = props;
 
     return (
@@ -57,7 +67,7 @@ const UserList = (props) => {
                 <Query query={GET_USERS}>
                     {({ loading, error, data }) => {
                         if (loading) {
-                            return "Loading...";
+                            return 'Loading...';
                         }
                         if (error) {
                             return `Error! ${error.message}`;
@@ -70,16 +80,18 @@ const UserList = (props) => {
                                         <TableRow>
                                             <TableCell>Twitch ID</TableCell>
                                             <TableCell>Username</TableCell>
-                                            <TableCell numeric={true}>Watched Time</TableCell>
+                                            <TableCell>Watched Time</TableCell>
                                             <TableCell>First Seen</TableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {data.users.map((user) => (
+                                        {data.users.map(user => (
                                             <TableRow key={user.twitchId}>
                                                 <TableCell>{user.twitchId}</TableCell>
                                                 <TableCell>{user.username}</TableCell>
-                                                <TableCell numeric={true}>{formatSeconds(user.watchedTime)}</TableCell>
+                                                <TableCell>
+                                                    {formatSeconds(user.watchedTime)}
+                                                </TableCell>
                                                 <TableCell>{user.createdAt}</TableCell>
                                             </TableRow>
                                         ))}

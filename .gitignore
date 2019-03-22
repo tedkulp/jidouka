@@ -7,3 +7,4 @@ yarn-error.log
 .tmuxp.yaml
 .nyc_output
 coverage
+**/.DS_Store
